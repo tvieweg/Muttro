@@ -10,6 +10,5 @@
 
 @interface MapViewController : UIViewController
 
-
 @end
 
