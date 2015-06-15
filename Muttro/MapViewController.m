@@ -36,8 +36,9 @@ const float kCoordinateEpsilon = 0.005;
 - (void)viewWillAppear:(BOOL)animated {
     
     [super viewWillAppear:YES];
-    if (CLLocationCoordinate2DIsValid([DataSource sharedInstance].lastTappedCoordinate)) {
+    if ([DataSource sharedInstance].locationWasTapped) {
         self.shouldUpdateMapRegionToUserLocation = NO;
+        [DataSource sharedInstance].locationWasTapped = NO;
         [self setMapRegionToLocation: [DataSource sharedInstance].lastTappedCoordinate withSpanRange:kMapSpan];
         
     } else {

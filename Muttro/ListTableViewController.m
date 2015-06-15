@@ -94,9 +94,11 @@
     if (indexPath.section == 0) {
         SearchAnnotation *tappedAnnotation = [DataSource sharedInstance].favoriteLocations[indexPath.row];
         [DataSource sharedInstance].lastTappedCoordinate = tappedAnnotation.coordinate;
+        [DataSource sharedInstance].locationWasTapped = YES;
     } else {
         MKMapItem *tappedMapItem = [DataSource sharedInstance].searchResults.mapItems[indexPath.row];
-        [DataSource sharedInstance].lastTappedCoordinate = tappedMapItem.placemark.coordinate; 
+        [DataSource sharedInstance].lastTappedCoordinate = tappedMapItem.placemark.coordinate;
+        [DataSource sharedInstance].locationWasTapped = YES;
     }
 
     [self.navigationController popToRootViewControllerAnimated:YES];

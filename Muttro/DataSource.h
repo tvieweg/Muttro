@@ -19,6 +19,7 @@ typedef void (^NewItemCompletionBlock)(NSError *error);
 @property (nonatomic, assign) MKCoordinateRegion region;
 @property (nonatomic, strong, readonly) NSMutableArray *recentSearches;
 @property (nonatomic, assign) CLLocationCoordinate2D lastTappedCoordinate;
+@property (nonatomic, assign) BOOL locationWasTapped;
 @property (nonatomic, strong, readonly) NSMutableArray *favoriteLocations;
 
 - (void) deleteFavoriteItem:(SearchAnnotation *)item;
