@@ -14,16 +14,17 @@
 #import "ListTableViewController.h"
 #import "SearchAnnotation.h"
 #import "CalloutAnnotation.h"
+#import "CalloutAnnotationView.h"
 
 const float kDistanceThreshold = 200;
 const float kMaxTimeBetweenMapUpdates = 15.0;
 const float kMapSpan = 0.03;
+const float kCoordinateEpsilon = 0.005;
 
 @interface MapViewController () <MKMapViewDelegate, CLLocationManagerDelegate, UISearchBarDelegate>
 
 @property (strong, nonatomic) MKMapView *mapView;
 @property (strong, nonatomic) CLLocationManager *locationManager;
-@property (strong, nonatomic) DataSource *data;
 @property (strong, nonatomic) UISearchBar *searchBar;
 @property (weak, nonatomic) UIGestureRecognizer *hideKeyboardTapGestureRecognizer;
 @property (assign, nonatomic) BOOL shouldUpdateMapRegionToUserLocation;
@@ -34,9 +35,10 @@ const float kMapSpan = 0.03;
 
 - (void)viewWillAppear:(BOOL)animated {
     
-    if ([DataSource sharedInstance].lastTappedItem != nil) {
+    [super viewWillAppear:YES];
+    if (CLLocationCoordinate2DIsValid([DataSource sharedInstance].lastTappedCoordinate)) {
         self.shouldUpdateMapRegionToUserLocation = NO;
-        [self setMapRegionToLocation: self.data.lastTappedItem.placemark.coordinate withSpanRange:kMapSpan];
+        [self setMapRegionToLocation: [DataSource sharedInstance].lastTappedCoordinate withSpanRange:kMapSpan];
         
     } else {
         self.shouldUpdateMapRegionToUserLocation = YES;
@@ -46,8 +48,11 @@ const float kMapSpan = 0.03;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.data = [DataSource sharedInstance];
     
+    //KVO for favoriteLocations
+    [[DataSource sharedInstance] addObserver:self forKeyPath:@"favoriteLocations" options:0 context:nil];
+    
+    //init search bar
     self.searchBar = [[UISearchBar alloc] init];
     self.searchBar.delegate = self;
     self.searchBar.backgroundColor = [UIColor whiteColor];
@@ -60,11 +65,11 @@ const float kMapSpan = 0.03;
     self.mapView.delegate = self;
     
     //init Bar Buttons
-    UIBarButtonItem *locationButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"location.png"] style:UIBarButtonItemStylePlain target:self action:@selector(locationTapped:)];
+    UIBarButtonItem *locationButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"location"] style:UIBarButtonItemStylePlain target:self action:@selector(locationTapped:)];
     
-    UIBarButtonItem *filterButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"filter.png"] style:UIBarButtonItemStylePlain target:self action:@selector(filterTapped:)];
+    UIBarButtonItem *filterButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"filter"] style:UIBarButtonItemStylePlain target:self action:@selector(filterTapped:)];
     
-    UIBarButtonItem *listButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"list.png"] style:UIBarButtonItemStylePlain target:self action:@selector(listTapped:)];
+    UIBarButtonItem *listButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"list"] style:UIBarButtonItemStylePlain target:self action:@selector(listTapped:)];
     
     //init Gesture Recognizer
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] init];
@@ -80,31 +85,34 @@ const float kMapSpan = 0.03;
     self.navigationItem.leftBarButtonItem = listButton;
     [self.view addSubview:self.mapView];
     [self.view addSubview:self.searchBar];
-
     
 }
 
 #pragma mark - Search
 
 -(void)searchUsingTextInSearchBar {
-    [self.data searchWithParameters:self.searchBar.text withCompletionBlock:^(NSError *error) {
-        [self.mapView setRegion:self.data.searchResults.boundingRegion];
-        [self.mapView removeAnnotations:self.mapView.annotations];
+    [[DataSource sharedInstance] searchWithParameters:self.searchBar.text withCompletionBlock:^(NSError *error) {
         
-        for (MKMapItem *mapItem in [self.data.searchResults mapItems]) {
-            
-            NSLog(@"Name: %@, MKAnnotation title: %@", [mapItem name], [[mapItem placemark] title]);
-            NSLog(@"Coordinate: %f %f", [[mapItem placemark] coordinate].latitude, [[mapItem placemark] coordinate].longitude);
-            // Should use a weak copy of self
-            NSLog(@"%@", mapItem);
-            
-            SearchAnnotation *annotation = [[SearchAnnotation alloc] initWithMapItem:mapItem];
-            
-            [self.mapView addAnnotation:annotation];
-            
-        }
+        [self.mapView setRegion:[DataSource sharedInstance].searchResults.boundingRegion];
+        [self.mapView removeAnnotations:self.mapView.annotations];
+        [self addSearchAnnotationsToMap];
+
     }];
     
+}
+
+-(void)addSearchAnnotationsToMap {
+    NSMutableArray *mapsToDisplay = [self checkFavoritesAgainstSearchAndRemoveDuplicates];
+    for (MKMapItem *mapItem in mapsToDisplay) {
+        
+        SearchAnnotation *annotation = [[SearchAnnotation alloc] initWithMapItem:mapItem];
+        
+        [self.mapView addAnnotation:annotation];
+        
+    }
+    for (SearchAnnotation *favAnnotation in [DataSource sharedInstance].favoriteLocations) {
+        [self.mapView addAnnotation:favAnnotation];
+    }
 }
 
 #pragma mark - Search Bar Delegate
@@ -118,6 +126,12 @@ const float kMapSpan = 0.03;
 
 - (void)searchBarTextDidBeginEditing:(UISearchBar *)searchBar {
     self.searchBar.showsCancelButton = YES;
+    
+    for (SearchAnnotation *annotation in [DataSource sharedInstance].favoriteLocations) {
+        
+        [self.mapView addAnnotation:annotation];
+        
+    }
     
     //Deselect annotations before next search. This resolves issue where crashes occurred when removing all previous annotations before next search.
     NSArray *selectedAnnotations = self.mapView.selectedAnnotations;
@@ -201,17 +215,31 @@ const float kMapSpan = 0.03;
             annotationView = [newAnnotation annotationView];
         } else {
             annotationView.annotation = annotation;
+            
+            //Set image when annotation is being reused. 
+            SearchAnnotation *tmpAnnotation = (SearchAnnotation *)annotation;
+            if(tmpAnnotation.favoriteState == FavoriteStateFavorited) {
+                annotationView.image = [UIImage imageNamed:@"pawprint-yellow"];
+            } else {
+                annotationView.image = [UIImage imageNamed:@"pawprint"];
+            }
+
         }
         
         return annotationView;
         
     } else if ([annotation isKindOfClass:[CalloutAnnotation class]]){
-            
-        CalloutAnnotation *newAnnotation = (CalloutAnnotation *)annotation;
-        MKAnnotationView *annotationView = [newAnnotation annotationView];
         
+        MKAnnotationView *annotationView = [mapView dequeueReusableAnnotationViewWithIdentifier:@"CalloutAnnotation"];
+        
+        if (annotationView == nil) {
+            CalloutAnnotation *newAnnotation = (CalloutAnnotation *)annotation;
+            annotationView = [newAnnotation annotationView];
+        } else {
+            annotationView.annotation = annotation;
+        }
+
         return annotationView; 
-        
         
     } else {
         
@@ -223,7 +251,7 @@ const float kMapSpan = 0.03;
 - (void)mapView:(MKMapView *)mapView didSelectAnnotationView:(MKAnnotationView *)view {
 
     if([view.annotation isKindOfClass:[SearchAnnotation class]]) {
-        CalloutAnnotation *calloutAnnotation = [[CalloutAnnotation alloc] initForAnnotation:view.annotation];
+        CalloutAnnotation *calloutAnnotation = [[CalloutAnnotation alloc] initForAnnotation: (SearchAnnotation *) view.annotation];
         [self.mapView addAnnotation:calloutAnnotation];
         dispatch_async(dispatch_get_main_queue(), ^{
             [self.mapView selectAnnotation:calloutAnnotation animated:YES];
@@ -239,21 +267,28 @@ const float kMapSpan = 0.03;
 - (void)mapView:(MKMapView *)mapView didDeselectAnnotationView:(MKAnnotationView *)view {
     
     if ([view.annotation isKindOfClass:[CalloutAnnotation class]]) {
-        [mapView removeAnnotation:view.annotation];
+        
+        //Check favorite state to ensure annotation is not about to be changed. This check prevents a crash where the mapView tries to remove the annotation twice (KVO change + deselect)
+        CalloutAnnotation *currentAnnotation = (CalloutAnnotation *)view.annotation;
+        if (currentAnnotation.searchAnnotation.favoriteState != FavoriteStateUnFavoriting &&
+            currentAnnotation.searchAnnotation.favoriteState != FavoriteStateFavoriting) {
+            [mapView removeAnnotation:view.annotation];
+        }
     }
 }
 
 - (void)mapView:(MKMapView *)mapView regionDidChangeAnimated:(BOOL)animated {
     
    
-    self.data.region = self.mapView.region;
-     //TODO: If the user is scrolling and a search just happened, find more items in the search. If not, end the search. This could be done by making the user clear text in the search bar. Needs to be a significant change in distance. Check that this isn't updating against user location updates.
+    [DataSource sharedInstance].region = self.mapView.region;
+    
+    //TODO: If the user is scrolling and a search just happened, find more items in the search. If not, end the search. This could be done by making the user clear text in the search bar. Needs to be a significant change in distance. Check that this isn't updating against user location updates.
     
     /*if (![self.searchBar.text isEqualToString:@""]) {
         //Search for whatever the thing is.
         [self searchUsingTextInSearchBar]; 
     }*/
-    NSLog(@"Updated data region");
+    
 }
 
 #pragma mark - Bar Buttons
@@ -268,7 +303,17 @@ const float kMapSpan = 0.03;
 
 - (void) listTapped:(UIBarButtonItem *)sender {
     ListTableViewController *listVC = [[ListTableViewController alloc] init];
-    [self.navigationController pushViewController:listVC animated:YES];
+    
+    CATransition *transition = [CATransition animation];
+    transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionDefault];
+    transition.duration = 0.45;
+    [transition setType:kCATransitionPush];
+    transition.subtype = kCATransitionFromLeft;
+    transition.delegate = self;
+    [self.navigationController.view.layer addAnimation:transition forKey:nil];
+    
+    self.navigationController.navigationBarHidden = NO;
+    [self.navigationController pushViewController:listVC animated:NO];
 }
 
 #pragma mark - TapGestureRecognizer
@@ -287,6 +332,60 @@ const float kMapSpan = 0.03;
     MKCoordinateRegion region = MKCoordinateRegionMake(location, span);
     [self.mapView setRegion:region animated:YES];
     
+}
+
+//TODO THIS SHOULD OCCUR IN DATASOURCE AND MAKE ONE ARRAY TO DISPLAY. THEN YOU ALWAYS CALL FROM THE SAME DISPLAY ARRAY.
+- (NSMutableArray *) checkFavoritesAgainstSearchAndRemoveDuplicates {
+    
+    NSMutableArray *mapItemsToDisplay = [[[DataSource sharedInstance].searchResults mapItems] mutableCopy];
+    NSMutableArray *itemsToRemove = [NSMutableArray new];
+    for (MKMapItem *searchItem in mapItemsToDisplay) {
+        
+        float searchLat = searchItem.placemark.coordinate.latitude;
+        float searchLong = searchItem.placemark.coordinate.longitude;
+        
+        for (SearchAnnotation *favorite in [DataSource sharedInstance].favoriteLocations) {
+            float favoriteLat = favorite.coordinate.latitude;
+            float favoriteLong = favorite.coordinate.longitude;
+            if (fabs(searchLat - favoriteLat) <= kCoordinateEpsilon && fabs(searchLong - favoriteLong) <= kCoordinateEpsilon) {
+                [itemsToRemove addObject:searchItem];
+            }
+        }
+    }
+    
+    [mapItemsToDisplay removeObjectsInArray:itemsToRemove];
+    
+    return mapItemsToDisplay;
+}
+
+- (void) reloadFavorites {
+    [self.mapView removeAnnotations:self.mapView.annotations];
+    [self.mapView addAnnotations:[DataSource sharedInstance].favoriteLocations];
+    [self addSearchAnnotationsToMap];
+}
+
+#pragma mark - Key/Value Observation
+
+- (void) observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
+    if (object == [DataSource sharedInstance] && [keyPath isEqualToString:@"favoriteLocations"]) {
+        
+        int kindOfChange = [change[NSKeyValueChangeKindKey] intValue];
+        
+        if (kindOfChange == NSKeyValueChangeSetting ||
+            kindOfChange == NSKeyValueChangeReplacement ||
+            kindOfChange == NSKeyValueChangeInsertion ||
+            kindOfChange == NSKeyValueChangeRemoval) {
+            
+            //favorite locations changed, reload annotations.
+            [self reloadFavorites];
+        
+        }
+    }
+}
+
+- (void) dealloc
+{
+    [[DataSource sharedInstance] removeObserver:self forKeyPath:@"favoriteLocations"];
 }
 
 @end

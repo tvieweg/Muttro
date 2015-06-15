@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 #import <MapKit/MapKit.h>
+#import "CalloutAnnotation.h"
+#import "SearchAnnotation.h"
 
 typedef void (^NewItemCompletionBlock)(NSError *error);
 
@@ -16,10 +18,15 @@ typedef void (^NewItemCompletionBlock)(NSError *error);
 @property (nonatomic, strong) MKLocalSearchResponse *searchResults;
 @property (nonatomic, assign) MKCoordinateRegion region;
 @property (nonatomic, strong, readonly) NSMutableArray *recentSearches;
-@property (nonatomic, strong) MKMapItem *lastTappedItem;
+@property (nonatomic, assign) CLLocationCoordinate2D lastTappedCoordinate;
+@property (nonatomic, strong, readonly) NSMutableArray *favoriteLocations;
+
+- (void) deleteFavoriteItem:(SearchAnnotation *)item;
 
 +(instancetype) sharedInstance;
 
 - (void) searchWithParameters:(NSString *)parameters withCompletionBlock:(NewItemCompletionBlock)completionHandler;
+
+- (void) toggleFavoriteStatus:(SearchAnnotation *)annotation;
 
 @end

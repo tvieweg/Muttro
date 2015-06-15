@@ -5,12 +5,13 @@
 //  Created by Trevor Vieweg on 6/9/15.
 //  Copyright (c) 2015 Trevor Vieweg. All rights reserved.
 //
-
+#import <MapKit/MapKit.h>
 #import "ListTableViewController.h"
 #import "DataSource.h"
-#import <MapKit/MapKit.h>
+#import "SearchAnnotation.h"
+#import "POITableViewCell.h"
 
-@interface ListTableViewController ()
+@interface ListTableViewController () <POITableViewCellDelegate>
 
 @end
 
@@ -19,12 +20,14 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    [self.tableView registerClass:[UITableViewCell class] forCellReuseIdentifier:@"cell"];
-    // Uncomment the following line to preserve selection between presentations.
-    // self.clearsSelectionOnViewWillAppear = NO;
+    [self.tableView registerClass:[POITableViewCell class] forCellReuseIdentifier:@"POICell"];
     
-    // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-    // self.navigationItem.rightBarButtonItem = self.editButtonItem;
+    UIBarButtonItem *mapButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"maps"] style:UIBarButtonItemStylePlain target:self action:@selector(mapTapped:)];
+    
+    self.navigationItem.hidesBackButton = YES;
+    
+    self.navigationItem.leftBarButtonItem = mapButton;
+
 }
 
 - (void)didReceiveMemoryWarning {
@@ -41,10 +44,14 @@
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     if (section==0)
     {
-        return 1;
-    }
-    else{
-        return [[DataSource sharedInstance].searchResults.mapItems count];
+        if ([DataSource sharedInstance].favoriteLocations.count > 0) {
+            return [DataSource sharedInstance].favoriteLocations.count;
+        } else {
+            return 1;
+        }
+        
+    } else {
+        return [DataSource sharedInstance].searchResults.mapItems.count;
     }
 }
 
@@ -56,17 +63,26 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
+    POITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"POICell" forIndexPath:indexPath];
     
     if (indexPath.section == 0) {
         
-        //TODO: Hookup Favorites
-        cell.textLabel.text = @"Favorites Go Here";
+        if ([DataSource sharedInstance].favoriteLocations.count > 0) {
+
+            SearchAnnotation *favItem = [DataSource sharedInstance].favoriteLocations[indexPath.row];
+            cell.poiName.text = favItem.title;
+            [cell.favoriteButton setFavoriteButtonState:favItem.favoriteState];
+            
+        } else {
+            cell.poiName.text = @"Star items to favorite";
+            cell.poiName.textColor = [UIColor grayColor];
+            //TODO make italic
+        }
     
     } else {
         
-        MKMapItem *item = [DataSource sharedInstance].searchResults.mapItems[indexPath.row];
-        cell.textLabel.text = item.name;
+        MKMapItem *searchItem = [DataSource sharedInstance].searchResults.mapItems[indexPath.row];
+        cell.poiName.text = searchItem.name;
         
     }
     
@@ -74,10 +90,38 @@
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    DataSource *data = [DataSource sharedInstance];
-    data.lastTappedItem = data.searchResults.mapItems[indexPath.row];
-    [self.navigationController popToRootViewControllerAnimated:YES]; 
 
+    if (indexPath.section == 0) {
+        SearchAnnotation *tappedAnnotation = [DataSource sharedInstance].favoriteLocations[indexPath.row];
+        [DataSource sharedInstance].lastTappedCoordinate = tappedAnnotation.coordinate;
+    } else {
+        MKMapItem *tappedMapItem = [DataSource sharedInstance].searchResults.mapItems[indexPath.row];
+        [DataSource sharedInstance].lastTappedCoordinate = tappedMapItem.placemark.coordinate; 
+    }
+
+    [self.navigationController popToRootViewControllerAnimated:YES];
+     
+
+}
+
+- (void) mapTapped:(UIBarButtonItem *)sender {
+    
+    CATransition *transition = [CATransition animation];
+    transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionDefault];
+    transition.duration = 0.45;
+    [transition setType:kCATransitionPush];
+    transition.subtype = kCATransitionFromRight;
+    transition.delegate = self;
+    [self.navigationController.view.layer addAnimation:transition forKey:nil];
+    
+    self.navigationController.navigationBarHidden = NO;
+    [self.navigationController popToRootViewControllerAnimated:NO];
+
+    
+}
+
+- (void) cellDidPressLikeButton:(POITableViewCell *)cell {
+    NSLog(@"Favorite button pressed"); 
 }
 
 @end

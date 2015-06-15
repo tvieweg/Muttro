@@ -8,13 +8,19 @@
 
 #import <Foundation/Foundation.h>
 #import <MapKit/MapKit.h>
+#import "FavoritesButton.h"
 
-@interface SearchAnnotation : NSObject <MKAnnotation>
+@interface SearchAnnotation : NSObject <MKAnnotation, NSCoding>
 
-@property (nonatomic, readonly) CLLocationCoordinate2D coordinate;
+@property (nonatomic, assign) CLLocationCoordinate2D coordinate;
 @property (copy, nonatomic) NSString *title;
+@property (copy, nonatomic) NSString *subtitle;
 @property (nonatomic, copy) NSString *phoneNumber;
 @property (nonatomic, strong) NSURL *url;
+
+@property (nonatomic, assign) FavoriteState favoriteState;
+
+- (void)setCoordinate:(CLLocationCoordinate2D)newCoordinate;
 
 -(id)initWithMapItem:(MKMapItem *)mapItem; 
 
