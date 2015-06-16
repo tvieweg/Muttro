@@ -11,7 +11,7 @@
 #import "CalloutAnnotation.h"
 #import "SearchAnnotation.h"
 
-typedef void (^NewItemCompletionBlock)(NSError *error);
+typedef void (^SearchCompletionBlock)(NSError *error);
 
 @interface DataSource : NSObject
 
@@ -26,8 +26,10 @@ typedef void (^NewItemCompletionBlock)(NSError *error);
 
 +(instancetype) sharedInstance;
 
-- (void) searchWithParameters:(NSString *)parameters withCompletionBlock:(NewItemCompletionBlock)completionHandler;
+- (void) searchWithParameters:(NSString *)parameters withCompletionBlock:(SearchCompletionBlock)completionHandler;
 
 - (void) toggleFavoriteStatus:(SearchAnnotation *)annotation;
+
+- (NSMutableArray *) checkFavoritesAgainstSearchAndRemoveDuplicates; 
 
 @end

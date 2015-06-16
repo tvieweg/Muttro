@@ -23,11 +23,7 @@
         self.imageView.contentMode = UIViewContentModeScaleAspectFit;
         self.contentEdgeInsets = UIEdgeInsetsMake(10, 10, 10, 10);
         self.contentVerticalAlignment = UIControlContentVerticalAlignmentTop;
-        
-        /*
-        _favoriteButtonState = FavoriteStateNotFavorited;
-        [self setFavoriteButtonState:_favoriteButtonState]; 
-         */
+    
     }
     
     return self;

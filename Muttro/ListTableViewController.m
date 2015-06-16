@@ -30,11 +30,6 @@
 
 }
 
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
-}
-
 #pragma mark - Table view data source
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
@@ -64,6 +59,8 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     POITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"POICell" forIndexPath:indexPath];
+    
+    cell.delegate = self;
     
     if (indexPath.section == 0) {
         
@@ -123,7 +120,10 @@
 }
 
 - (void) cellDidPressLikeButton:(POITableViewCell *)cell {
-    NSLog(@"Favorite button pressed"); 
+    NSLog(@"Favorite button pressed");
+    
+    //If cell is in favorites, toggle favorites. If it's in search annotations, toggle from search annotations. Reload favorites table. 
+
 }
 
 @end

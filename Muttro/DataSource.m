@@ -11,6 +11,8 @@
 
 #import "DataSource.h"
 
+const float kCoordinateEpsilon = 0.005;
+
 @interface DataSource () {
     NSMutableArray *_favoriteLocations;
 }
@@ -69,7 +71,6 @@
         });
 
     }
-    
     return self;
 }
 
@@ -107,9 +108,10 @@
     });
 }
 
--(void) searchWithParameters:(NSString *)parameters withCompletionBlock:(NewItemCompletionBlock)completionHandler {
+-(void) searchWithParameters:(NSString *)parameters withCompletionBlock:(SearchCompletionBlock)completionHandler {
     MKLocalSearchRequest *searchRequest = [[MKLocalSearchRequest alloc] init];
-    NSString *parametersWithDogAppended = [parameters stringByAppendingString:@" dog"];
+    NSString *dog = @"dog ";
+    NSString *parametersWithDogAppended = [dog stringByAppendingString:parameters];
     searchRequest.naturalLanguageQuery = parametersWithDogAppended;
     
     //include recent search in search history
@@ -134,7 +136,7 @@
             
             if (error != nil) {
                 [[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Map Error",nil)
-                                            message:[error localizedDescription]
+                                            message:[error localizedFailureReason]
                                            delegate:nil
                                   cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil] show];
                 return;
@@ -152,10 +154,33 @@
             if (completionHandler) {
                 completionHandler(error);
             }
-            
         }];
     }
 }
+
+- (NSMutableArray *) checkFavoritesAgainstSearchAndRemoveDuplicates {
+    
+    NSMutableArray *mapItemsToDisplay = [[self.searchResults mapItems] mutableCopy];
+    NSMutableArray *itemsToRemove = [NSMutableArray new];
+    for (MKMapItem *searchItem in mapItemsToDisplay) {
+        
+        float searchLat = searchItem.placemark.coordinate.latitude;
+        float searchLong = searchItem.placemark.coordinate.longitude;
+        
+        for (SearchAnnotation *favorite in self.favoriteLocations) {
+            float favoriteLat = favorite.coordinate.latitude;
+            float favoriteLong = favorite.coordinate.longitude;
+            if (fabs(searchLat - favoriteLat) <= kCoordinateEpsilon && fabs(searchLong - favoriteLong) <= kCoordinateEpsilon) {
+                [itemsToRemove addObject:searchItem];
+            }
+        }
+    }
+    
+    [mapItemsToDisplay removeObjectsInArray:itemsToRemove];
+    return mapItemsToDisplay;
+}
+
+#pragma mark - Favorite toggling
 
 - (void) toggleFavoriteStatus:(SearchAnnotation *)annotation {
     if (annotation.favoriteState == FavoriteStateNotFavorited) {
@@ -186,8 +211,6 @@
             NSLog(@"Couldn't write file: %@", dataError);
         }
     });
-        
-
 }
 
 #pragma mark - Filepath definition
@@ -233,8 +256,6 @@
 - (void) addFavoriteLocationsObject:(SearchAnnotation *)annotation {
     NSMutableArray *mutableArrayWithKVO = [self mutableArrayValueForKey:@"favoriteLocations"];
     [mutableArrayWithKVO addObject:annotation];
-
-
 }
 
 @end

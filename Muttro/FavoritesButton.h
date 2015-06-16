@@ -19,5 +19,4 @@ typedef NS_ENUM(NSInteger, FavoriteState) {
 
 @property (nonatomic, assign) FavoriteState favoriteButtonState;
 
-
 @end

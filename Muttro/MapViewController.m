@@ -19,7 +19,7 @@
 const float kDistanceThreshold = 200;
 const float kMaxTimeBetweenMapUpdates = 15.0;
 const float kMapSpan = 0.03;
-const float kCoordinateEpsilon = 0.005;
+const float kMaxEpsilon = 0.005;
 
 @interface MapViewController () <MKMapViewDelegate, CLLocationManagerDelegate, UISearchBarDelegate, CalloutAnnotationViewDelegate>
 
@@ -37,6 +37,7 @@ const float kCoordinateEpsilon = 0.005;
     
     [super viewWillAppear:YES];
     if ([DataSource sharedInstance].locationWasTapped) {
+       
         self.shouldUpdateMapRegionToUserLocation = NO;
         [DataSource sharedInstance].locationWasTapped = NO;
         [self setMapRegionToLocation: [DataSource sharedInstance].lastTappedCoordinate withSpanRange:kMapSpan];
@@ -94,16 +95,16 @@ const float kCoordinateEpsilon = 0.005;
 -(void)searchUsingTextInSearchBar {
     [[DataSource sharedInstance] searchWithParameters:self.searchBar.text withCompletionBlock:^(NSError *error) {
         
-        [self.mapView setRegion:[DataSource sharedInstance].searchResults.boundingRegion];
         [self.mapView removeAnnotations:self.mapView.annotations];
-        [self addSearchAnnotationsToMap];
+        [self.mapView setRegion:[DataSource sharedInstance].searchResults.boundingRegion];
+        [self addSearchAndFavoriteAnnotationsToMap];
 
     }];
     
 }
 
--(void)addSearchAnnotationsToMap {
-    NSMutableArray *mapsToDisplay = [self checkFavoritesAgainstSearchAndRemoveDuplicates];
+-(void)addSearchAndFavoriteAnnotationsToMap {
+    NSMutableArray *mapsToDisplay = [[DataSource sharedInstance] checkFavoritesAgainstSearchAndRemoveDuplicates];
     for (MKMapItem *mapItem in mapsToDisplay) {
         
         SearchAnnotation *annotation = [[SearchAnnotation alloc] initWithMapItem:mapItem];
@@ -111,6 +112,7 @@ const float kCoordinateEpsilon = 0.005;
         [self.mapView addAnnotation:annotation];
         
     }
+    
     for (SearchAnnotation *favAnnotation in [DataSource sharedInstance].favoriteLocations) {
         [self.mapView addAnnotation:favAnnotation];
     }
@@ -258,6 +260,7 @@ const float kCoordinateEpsilon = 0.005;
         dispatch_async(dispatch_get_main_queue(), ^{
             [self.mapView selectAnnotation:calloutAnnotation animated:YES];
 
+            //Move to annotation if the view is not contained on the current view.
             if (!CGRectContainsRect(self.mapView.frame, calloutAnnotation.annotationView.frame)) {
                 [self setMapRegionToLocation:view.annotation.coordinate withSpanRange:self.mapView.region.span.longitudeDelta];
             }
@@ -336,34 +339,10 @@ const float kCoordinateEpsilon = 0.005;
     
 }
 
-//TODO THIS SHOULD OCCUR IN DATASOURCE AND MAKE ONE ARRAY TO DISPLAY. THEN YOU ALWAYS CALL FROM THE SAME DISPLAY ARRAY.
-- (NSMutableArray *) checkFavoritesAgainstSearchAndRemoveDuplicates {
-    
-    NSMutableArray *mapItemsToDisplay = [[[DataSource sharedInstance].searchResults mapItems] mutableCopy];
-    NSMutableArray *itemsToRemove = [NSMutableArray new];
-    for (MKMapItem *searchItem in mapItemsToDisplay) {
-        
-        float searchLat = searchItem.placemark.coordinate.latitude;
-        float searchLong = searchItem.placemark.coordinate.longitude;
-        
-        for (SearchAnnotation *favorite in [DataSource sharedInstance].favoriteLocations) {
-            float favoriteLat = favorite.coordinate.latitude;
-            float favoriteLong = favorite.coordinate.longitude;
-            if (fabs(searchLat - favoriteLat) <= kCoordinateEpsilon && fabs(searchLong - favoriteLong) <= kCoordinateEpsilon) {
-                [itemsToRemove addObject:searchItem];
-            }
-        }
-    }
-    
-    [mapItemsToDisplay removeObjectsInArray:itemsToRemove];
-    
-    return mapItemsToDisplay;
-}
-
-- (void) reloadFavorites {
+- (void) reloadAnnotations {
     [self.mapView removeAnnotations:self.mapView.annotations];
     [self.mapView addAnnotations:[DataSource sharedInstance].favoriteLocations];
-    [self addSearchAnnotationsToMap];
+    [self addSearchAndFavoriteAnnotationsToMap];
 }
 
 #pragma mark - Key/Value Observation
@@ -374,13 +353,12 @@ const float kCoordinateEpsilon = 0.005;
         int kindOfChange = [change[NSKeyValueChangeKindKey] intValue];
         
         if (kindOfChange == NSKeyValueChangeSetting) {
-            [self reloadFavorites];
+            [self reloadAnnotations];
         }
     }
 }
 
-- (void) dealloc
-{
+- (void) dealloc {
     [[DataSource sharedInstance] removeObserver:self forKeyPath:@"favoriteLocations"];
 }
 
@@ -412,7 +390,7 @@ const float kCoordinateEpsilon = 0.005;
             float favoriteLat = annotationView.searchAnnotation.coordinate.latitude;
             float favoriteLong = annotationView.searchAnnotation.coordinate.longitude;
             
-            if (fabs(searchLat - favoriteLat) <= kCoordinateEpsilon && fabs(searchLong - favoriteLong) <= kCoordinateEpsilon) {
+            if (fabs(searchLat - favoriteLat) <= kMaxEpsilon && fabs(searchLong - favoriteLong) <= kMaxEpsilon) {
                 keepAnnotation = YES;
             }
         }
@@ -426,7 +404,6 @@ const float kCoordinateEpsilon = 0.005;
             [self.mapView deselectAnnotation:annotationView.annotation animated:YES];
         }
     }
-    
 }
 
 @end
