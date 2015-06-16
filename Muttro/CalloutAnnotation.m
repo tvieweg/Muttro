@@ -30,7 +30,7 @@
     return self;
 }
 
-- (MKAnnotationView *)annotationView {
+- (CalloutAnnotationView *)annotationView {
     
     self.view = [[CalloutAnnotationView alloc] initWithAnnotation:self.searchAnnotation reuseIdentifier:@"CalloutAnnotation"];
     

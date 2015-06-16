@@ -21,7 +21,7 @@ const float kMaxTimeBetweenMapUpdates = 15.0;
 const float kMapSpan = 0.03;
 const float kCoordinateEpsilon = 0.005;
 
-@interface MapViewController () <MKMapViewDelegate, CLLocationManagerDelegate, UISearchBarDelegate>
+@interface MapViewController () <MKMapViewDelegate, CLLocationManagerDelegate, UISearchBarDelegate, CalloutAnnotationViewDelegate>
 
 @property (strong, nonatomic) MKMapView *mapView;
 @property (strong, nonatomic) CLLocationManager *locationManager;
@@ -231,11 +231,12 @@ const float kCoordinateEpsilon = 0.005;
         
     } else if ([annotation isKindOfClass:[CalloutAnnotation class]]){
         
-        MKAnnotationView *annotationView = [mapView dequeueReusableAnnotationViewWithIdentifier:@"CalloutAnnotation"];
+        CalloutAnnotationView *annotationView = (CalloutAnnotationView *)[mapView dequeueReusableAnnotationViewWithIdentifier:@"CalloutAnnotation"];
         
         if (annotationView == nil) {
             CalloutAnnotation *newAnnotation = (CalloutAnnotation *)annotation;
             annotationView = [newAnnotation annotationView];
+            annotationView.delegate = self; 
         } else {
             annotationView.annotation = annotation;
         }
@@ -387,6 +388,13 @@ const float kCoordinateEpsilon = 0.005;
 - (void) dealloc
 {
     [[DataSource sharedInstance] removeObserver:self forKeyPath:@"favoriteLocations"];
+}
+
+#pragma mark - CalloutAnnotationViewDelegate
+
+- (void) didToggleFavoriteButton:(CalloutAnnotationView *)annotationView {
+    [[DataSource sharedInstance] toggleFavoriteStatus:annotationView.searchAnnotation];
+    [self mapView:self.mapView didSelectAnnotationView:[annotationView.searchAnnotation annotationView]];
 }
 
 @end

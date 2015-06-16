@@ -9,11 +9,12 @@
 #import <Foundation/Foundation.h>
 #import <MapKit/MapKit.h>
 #import "SearchAnnotation.h"
+#import "CalloutAnnotationView.h"
 
 @interface CalloutAnnotation : NSObject <MKAnnotation>
 
 - (id)initForAnnotation:(SearchAnnotation *)annotation;
-- (MKAnnotationView *)annotationView;
+- (CalloutAnnotationView *)annotationView;
 
 @property (nonatomic, assign) CLLocationCoordinate2D coordinate;
 @property (copy, nonatomic) NSString *title;

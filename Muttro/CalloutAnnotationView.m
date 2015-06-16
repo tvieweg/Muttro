@@ -20,7 +20,6 @@ const float kCALabelHeight = 40.0;
 
 @property (nonatomic, strong) FavoritesButton *favoriteButton;
 @property (nonatomic, strong) UILabel *titleLabel;
-@property (nonatomic, strong) SearchAnnotation *searchAnnotation;
 
 @end
 
@@ -75,9 +74,7 @@ const float kCALabelHeight = 40.0;
 }
 
 - (void) favoritePressed:(FavoritesButton *)sender {
-    [[DataSource sharedInstance] toggleFavoriteStatus:self.searchAnnotation];
-    [self.favoriteButton setFavoriteButtonState:self.searchAnnotation.favoriteState];
-    
+    [self.delegate didToggleFavoriteButton: self];
 }
 
 
