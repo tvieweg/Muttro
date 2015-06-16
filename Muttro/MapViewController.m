@@ -373,14 +373,8 @@ const float kCoordinateEpsilon = 0.005;
         
         int kindOfChange = [change[NSKeyValueChangeKindKey] intValue];
         
-        if (kindOfChange == NSKeyValueChangeSetting ||
-            kindOfChange == NSKeyValueChangeReplacement ||
-            kindOfChange == NSKeyValueChangeInsertion ||
-            kindOfChange == NSKeyValueChangeRemoval) {
-            
-            //favorite locations changed, reload annotations.
+        if (kindOfChange == NSKeyValueChangeSetting) {
             [self reloadFavorites];
-        
         }
     }
 }
@@ -393,8 +387,46 @@ const float kCoordinateEpsilon = 0.005;
 #pragma mark - CalloutAnnotationViewDelegate
 
 - (void) didToggleFavoriteButton:(CalloutAnnotationView *)annotationView {
+    
+    //Update data model.
     [[DataSource sharedInstance] toggleFavoriteStatus:annotationView.searchAnnotation];
-    [self mapView:self.mapView didSelectAnnotationView:[annotationView.searchAnnotation annotationView]];
+    
+    
+    if (annotationView.searchAnnotation.favoriteState == FavoriteStateFavorited) {
+        
+        //Update annotation marker and refresh callout view.
+        [self.mapView viewForAnnotation:annotationView.searchAnnotation].image = [UIImage imageNamed:@"pawprint-yellow"];
+        [self mapView:self.mapView didSelectAnnotationView:[annotationView.searchAnnotation annotationView]];
+        
+    } else if (annotationView.searchAnnotation.favoriteState == FavoriteStateNotFavorited) {
+        
+        //By default, the annotation should be removed, unless the current search contains the annotation (i.e., the user found it on this search.)
+        BOOL keepAnnotation = NO;
+        
+        //Look for annotation in search results. If it's there, update keepAnnotation
+        for (MKMapItem *searchItem in [[DataSource sharedInstance].searchResults mapItems]) {
+            
+            float searchLat = searchItem.placemark.coordinate.latitude;
+            float searchLong = searchItem.placemark.coordinate.longitude;
+            
+            float favoriteLat = annotationView.searchAnnotation.coordinate.latitude;
+            float favoriteLong = annotationView.searchAnnotation.coordinate.longitude;
+            
+            if (fabs(searchLat - favoriteLat) <= kCoordinateEpsilon && fabs(searchLong - favoriteLong) <= kCoordinateEpsilon) {
+                keepAnnotation = YES;
+            }
+        }
+        
+        //If the annotation should stay, update the annotation marker and refresh the callout view. If not, remove the search and callout annotations. 
+        if (keepAnnotation) {
+            [self.mapView viewForAnnotation:annotationView.searchAnnotation].image = [UIImage imageNamed:@"pawprint"];
+            [self mapView:self.mapView didSelectAnnotationView:[annotationView.searchAnnotation annotationView]];
+        } else {
+            [self.mapView removeAnnotation:annotationView.searchAnnotation];
+            [self.mapView deselectAnnotation:annotationView.annotation animated:YES];
+        }
+    }
+    
 }
 
 @end

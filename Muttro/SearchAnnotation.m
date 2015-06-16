@@ -38,7 +38,7 @@
 
 - (MKAnnotationView *)annotationView {
     MKAnnotationView *annotationView = [[MKAnnotationView alloc] initWithAnnotation:self reuseIdentifier:@"SearchAnnotation"];
-    
+
     annotationView.enabled = YES;
     annotationView.canShowCallout = NO;
     if(self.favoriteState == FavoriteStateFavorited) {
@@ -49,6 +49,7 @@
     
     return annotationView; 
 }
+
 
 #pragma mark - NSCoding
 
