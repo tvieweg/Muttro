@@ -11,6 +11,7 @@
 
 @interface AppDelegate ()
 
+
 @end
 
 @implementation AppDelegate
@@ -21,8 +22,8 @@
     
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     self.window.backgroundColor = [UIColor whiteColor];
-    
     UINavigationController *navVC = [[UINavigationController alloc] init];
+    
     MapViewController *mapVC = [[MapViewController alloc] init];
     [navVC setViewControllers:@[mapVC] animated:YES];
     self.window.rootViewController = navVC;
