@@ -8,7 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
-@class FavoritesButton, POITableViewCell; 
+@class FavoritesButton, POITableViewCell, SearchAnnotation;
 
 @protocol POITableViewCellDelegate <NSObject>
 
@@ -18,6 +18,7 @@
 
 @interface POITableViewCell : UITableViewCell
 
+@property (nonatomic, strong) SearchAnnotation *searchAnnotation;
 @property (nonatomic, strong) FavoritesButton *favoriteButton;
 @property (nonatomic, strong) UILabel *poiName;
 @property (nonatomic, strong) UILabel *poiDescription;
