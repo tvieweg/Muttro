@@ -15,19 +15,21 @@
 #import "SearchAnnotation.h"
 #import "CalloutAnnotation.h"
 #import "CalloutAnnotationView.h"
+#import "QuickSearchToolbar.h"
 
 const float kDistanceThreshold = 200;
 const float kMaxTimeBetweenMapUpdates = 15.0;
 const float kMapSpan = 0.03;
 const float kMaxEpsilon = 0.005;
 
-@interface MapViewController () <MKMapViewDelegate, CLLocationManagerDelegate, UISearchBarDelegate, CalloutAnnotationViewDelegate>
+@interface MapViewController () <MKMapViewDelegate, CLLocationManagerDelegate, UISearchBarDelegate, CalloutAnnotationViewDelegate, QuickSearchToolbarDelegate>
 
 @property (strong, nonatomic) MKMapView *mapView;
 @property (strong, nonatomic) CLLocationManager *locationManager;
 @property (strong, nonatomic) UISearchBar *searchBar;
 @property (weak, nonatomic) UIGestureRecognizer *hideKeyboardTapGestureRecognizer;
 @property (assign, nonatomic) BOOL shouldUpdateMapRegionToUserLocation;
+@property (strong, nonatomic) QuickSearchToolbar *quickSearchToolbar;
 
 @end
 
@@ -46,6 +48,14 @@ const float kMaxEpsilon = 0.005;
         self.shouldUpdateMapRegionToUserLocation = YES;
     }
     
+    NSArray *selectedAnnotations = self.mapView.selectedAnnotations;
+    for(id annotation in selectedAnnotations) {
+        [self.mapView deselectAnnotation:annotation animated:NO];
+    }
+    
+    [self.mapView removeAnnotations:self.mapView.annotations];
+    [self addSearchAndFavoriteAnnotationsToMap]; 
+    
 }
 
 - (void)viewDidLoad {
@@ -60,6 +70,9 @@ const float kMaxEpsilon = 0.005;
     self.searchBar.backgroundColor = [UIColor whiteColor];
     self.searchBar.alpha = 0.8;
 
+    //init Quick Search toolbar
+    self.quickSearchToolbar = [[QuickSearchToolbar alloc] init];
+    self.quickSearchToolbar.delegate = self;
     
     //init MapView
     self.mapView = [[MKMapView alloc] init];
@@ -87,14 +100,20 @@ const float kMaxEpsilon = 0.005;
     self.navigationItem.leftBarButtonItem = listButton;
     [self.view addSubview:self.mapView];
     [self.view addSubview:self.searchBar];
+    [self.view addSubview:self.quickSearchToolbar];
     
 }
 
 #pragma mark - Search
 
--(void)searchUsingTextInSearchBar {
-    [[DataSource sharedInstance] searchWithParameters:self.searchBar.text withCompletionBlock:^(NSError *error) {
+-(void)searchUsingSearchQuery:(NSString *)searchText {
+    [[DataSource sharedInstance] searchWithParameters:searchText withCompletionBlock:^(NSError *error) {
         
+        NSArray *selectedAnnotations = self.mapView.selectedAnnotations;
+        for(id annotation in selectedAnnotations) {
+            [self.mapView deselectAnnotation:annotation animated:NO];
+        }
+
         [self.mapView removeAnnotations:self.mapView.annotations];
         [self.mapView setRegion:[DataSource sharedInstance].searchResults.boundingRegion];
         [self addSearchAndFavoriteAnnotationsToMap];
@@ -104,25 +123,17 @@ const float kMaxEpsilon = 0.005;
 }
 
 -(void)addSearchAndFavoriteAnnotationsToMap {
-    NSMutableArray *mapsToDisplay = [[DataSource sharedInstance] checkFavoritesAgainstSearchAndRemoveDuplicates];
-    for (MKMapItem *mapItem in mapsToDisplay) {
-        
-        SearchAnnotation *annotation = [[SearchAnnotation alloc] initWithMapItem:mapItem];
-        
-        [self.mapView addAnnotation:annotation];
-        
-    }
+    NSMutableArray *searchAnnotationsToDisplay = [[DataSource sharedInstance] checkFavoritesAgainstSearchAndRemoveDuplicates];
     
-    for (SearchAnnotation *favAnnotation in [DataSource sharedInstance].favoriteLocations) {
-        [self.mapView addAnnotation:favAnnotation];
-    }
+    [self.mapView addAnnotations:searchAnnotationsToDisplay];
+    [self.mapView addAnnotations:[DataSource sharedInstance].favoriteLocations];
 }
 
 #pragma mark - Search Bar Delegate
 
 - (void)searchBarSearchButtonClicked:(UISearchBar *)searchBar {
 
-    [self searchUsingTextInSearchBar];
+    [self searchUsingSearchQuery:self.searchBar.text];
     [self.searchBar resignFirstResponder];
     
 }
@@ -202,6 +213,7 @@ const float kMaxEpsilon = 0.005;
     CGFloat navBarHeight = CGRectGetMaxY(self.navigationController.navigationBar.frame);
     self.mapView.frame = CGRectMake(0, navBarHeight, self.view.frame.size.width, self.view.frame.size.height - navBarHeight);
     self.searchBar.frame = CGRectMake(0, navBarHeight, self.view.bounds.size.width, 40);
+    self.quickSearchToolbar.frame = CGRectMake(0, CGRectGetMaxY(self.searchBar.frame), self.view.bounds.size.width, 60);
 
 }
 
@@ -345,7 +357,7 @@ const float kMaxEpsilon = 0.005;
     [self addSearchAndFavoriteAnnotationsToMap];
 }
 
-#pragma mark - Key/Value Observation
+#pragma mark - KVO
 
 - (void) observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
     if (object == [DataSource sharedInstance] && [keyPath isEqualToString:@"favoriteLocations"]) {
@@ -404,6 +416,28 @@ const float kMaxEpsilon = 0.005;
             [self.mapView deselectAnnotation:annotationView.annotation animated:YES];
         }
     }
+}
+
+#pragma mark - QuickSearchToolbarDelegate
+
+- (void) didPressParkButton:(QuickSearchToolbar *)sender {
+    [self searchUsingSearchQuery:@"park"];
+}
+
+- (void) didPressVetButton:(QuickSearchToolbar *)sender {
+    [self searchUsingSearchQuery:@"boarding"];
+}
+
+- (void) didPressGroomerButton:(QuickSearchToolbar *)sender {
+    [self searchUsingSearchQuery:@"grooming"];
+}
+
+- (void) didPressDayCareButton:(QuickSearchToolbar *)sender {
+    [self searchUsingSearchQuery:@"sitting"];
+}
+
+- (void) didPressPetStoreButton:(QuickSearchToolbar *)sender {
+    [self searchUsingSearchQuery:@"pet supplies"];
 }
 
 @end

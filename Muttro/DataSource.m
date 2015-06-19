@@ -19,6 +19,8 @@ const float kCoordinateEpsilon = 0.005;
 
 @property (nonatomic, strong) NSMutableArray *recentSearches;
 @property (nonatomic, strong) NSMutableArray *favoriteLocations;
+@property (nonatomic, strong) NSMutableArray *searchResultsAnnotations;
+
 
 @end
 
@@ -41,6 +43,7 @@ const float kCoordinateEpsilon = 0.005;
         //initialize arrays.
         self.recentSearches = [NSMutableArray new];
         self.favoriteLocations = [NSMutableArray new];
+        self.searchResultsAnnotations = [NSMutableArray new]; 
         
         //Make requests to get objects from KeyedArchiver
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -150,7 +153,7 @@ const float kCoordinateEpsilon = 0.005;
                 return;
             }
             self.searchResults = response;
-            
+            [self createAnnotationsForMapItems:[self.searchResults mapItems]];
             if (completionHandler) {
                 completionHandler(error);
             }
@@ -159,25 +162,34 @@ const float kCoordinateEpsilon = 0.005;
 }
 
 - (NSMutableArray *) checkFavoritesAgainstSearchAndRemoveDuplicates {
-    
-    NSMutableArray *mapItemsToDisplay = [[self.searchResults mapItems] mutableCopy];
     NSMutableArray *itemsToRemove = [NSMutableArray new];
-    for (MKMapItem *searchItem in mapItemsToDisplay) {
+    for (SearchAnnotation *annotation in self.searchResultsAnnotations) {
         
-        float searchLat = searchItem.placemark.coordinate.latitude;
-        float searchLong = searchItem.placemark.coordinate.longitude;
+        float searchLat = annotation.coordinate.latitude;
+        float searchLong = annotation.coordinate.longitude;
         
         for (SearchAnnotation *favorite in self.favoriteLocations) {
             float favoriteLat = favorite.coordinate.latitude;
             float favoriteLong = favorite.coordinate.longitude;
             if (fabs(searchLat - favoriteLat) <= kCoordinateEpsilon && fabs(searchLong - favoriteLong) <= kCoordinateEpsilon) {
-                [itemsToRemove addObject:searchItem];
+                [itemsToRemove addObject:annotation];
             }
         }
     }
     
-    [mapItemsToDisplay removeObjectsInArray:itemsToRemove];
-    return mapItemsToDisplay;
+    [self.searchResultsAnnotations removeObjectsInArray:itemsToRemove];
+    
+    return self.searchResultsAnnotations;
+}
+
+- (void) createAnnotationsForMapItems:(NSArray *)mapItems {
+    [self.searchResultsAnnotations removeAllObjects];
+    for (MKMapItem *mapItem in mapItems) {
+        SearchAnnotation *annotation = [[SearchAnnotation alloc] initWithMapItem:mapItem];
+        
+        [self.searchResultsAnnotations addObject:annotation];
+        
+    }
 }
 
 #pragma mark - Favorite toggling

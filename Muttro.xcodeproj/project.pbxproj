@@ -20,6 +20,7 @@
 		B162E1BE1B2B853D00918DF9 /* CalloutAnnotationView.m in Sources */ = {isa = PBXBuildFile; fileRef = B162E1BD1B2B853D00918DF9 /* CalloutAnnotationView.m */; };
 		B16C9D461B2790A400BA1B97 /* ListTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B16C9D451B2790A400BA1B97 /* ListTableViewController.m */; };
 		B19155141B263AE60089B717 /* DataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = B19155131B263AE60089B717 /* DataSource.m */; };
+		B1AA4E9D1B320CB90050E57C /* QuickSearchToolbar.m in Sources */ = {isa = PBXBuildFile; fileRef = B1AA4E9C1B320CB90050E57C /* QuickSearchToolbar.m */; };
 		B1B3D2CB1B28991600E2A567 /* SearchAnnotation.m in Sources */ = {isa = PBXBuildFile; fileRef = B1B3D2CA1B28991600E2A567 /* SearchAnnotation.m */; };
 		B1B3D2D11B28B63F00E2A567 /* CalloutAnnotation.m in Sources */ = {isa = PBXBuildFile; fileRef = B1B3D2D01B28B63F00E2A567 /* CalloutAnnotation.m */; };
 		B1E653461B2627CB0008B3DC /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B16278DE1B25FEE400097734 /* CoreLocation.framework */; };
@@ -63,6 +64,8 @@
 		B16C9D451B2790A400BA1B97 /* ListTableViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ListTableViewController.m; sourceTree = "<group>"; };
 		B19155121B263AE60089B717 /* DataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DataSource.h; sourceTree = "<group>"; };
 		B19155131B263AE60089B717 /* DataSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DataSource.m; sourceTree = "<group>"; };
+		B1AA4E9B1B320CB90050E57C /* QuickSearchToolbar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QuickSearchToolbar.h; sourceTree = "<group>"; };
+		B1AA4E9C1B320CB90050E57C /* QuickSearchToolbar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QuickSearchToolbar.m; sourceTree = "<group>"; };
 		B1B3D2C91B28991600E2A567 /* SearchAnnotation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SearchAnnotation.h; sourceTree = "<group>"; };
 		B1B3D2CA1B28991600E2A567 /* SearchAnnotation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SearchAnnotation.m; sourceTree = "<group>"; };
 		B1B3D2CF1B28B63F00E2A567 /* CalloutAnnotation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CalloutAnnotation.h; sourceTree = "<group>"; };
@@ -146,6 +149,8 @@
 				B156A3A21B2555DB000529AD /* AppDelegate.m */,
 				B156A3A41B2555DB000529AD /* MapViewController.h */,
 				B156A3A51B2555DB000529AD /* MapViewController.m */,
+				B1AA4E9B1B320CB90050E57C /* QuickSearchToolbar.h */,
+				B1AA4E9C1B320CB90050E57C /* QuickSearchToolbar.m */,
 				B16C9D441B2790A400BA1B97 /* ListTableViewController.h */,
 				B16C9D451B2790A400BA1B97 /* ListTableViewController.m */,
 				B1250A851B2CD1B700AAB9FC /* POITableViewCell.h */,
@@ -330,6 +335,7 @@
 				B162E1BB1B2AAB5900918DF9 /* FavoritesButton.m in Sources */,
 				B156A3A31B2555DB000529AD /* AppDelegate.m in Sources */,
 				B19155141B263AE60089B717 /* DataSource.m in Sources */,
+				B1AA4E9D1B320CB90050E57C /* QuickSearchToolbar.m in Sources */,
 				B156A3A01B2555DB000529AD /* main.m in Sources */,
 				B16C9D461B2790A400BA1B97 /* ListTableViewController.m in Sources */,
 			);

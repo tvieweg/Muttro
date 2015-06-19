@@ -18,6 +18,8 @@ typedef void (^SearchCompletionBlock)(NSError *error);
 @property (nonatomic, strong) MKLocalSearchResponse *searchResults;
 @property (nonatomic, assign) MKCoordinateRegion region;
 @property (nonatomic, strong, readonly) NSMutableArray *recentSearches;
+@property (nonatomic, strong, readonly) NSMutableArray *searchResultsAnnotations;
+
 @property (nonatomic, assign) CLLocationCoordinate2D lastTappedCoordinate;
 @property (nonatomic, assign) BOOL locationWasTapped;
 @property (nonatomic, strong, readonly) NSMutableArray *favoriteLocations;

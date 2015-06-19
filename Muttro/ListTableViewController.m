@@ -20,6 +20,8 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    [[DataSource sharedInstance] addObserver:self forKeyPath:@"favoriteLocations" options:0 context:nil];
+    
     [self.tableView registerClass:[POITableViewCell class] forCellReuseIdentifier:@"POICell"];
     
     UIBarButtonItem *mapButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"maps"] style:UIBarButtonItemStylePlain target:self action:@selector(mapTapped:)];
@@ -46,7 +48,7 @@
         }
         
     } else {
-        return [DataSource sharedInstance].searchResults.mapItems.count;
+        return [DataSource sharedInstance].searchResultsAnnotations.count;
     }
 }
 
@@ -66,20 +68,26 @@
         
         if ([DataSource sharedInstance].favoriteLocations.count > 0) {
 
-            SearchAnnotation *favItem = [DataSource sharedInstance].favoriteLocations[indexPath.row];
-            cell.poiName.text = favItem.title;
-            [cell.favoriteButton setFavoriteButtonState:favItem.favoriteState];
+            cell.searchAnnotation = [DataSource sharedInstance].favoriteLocations[indexPath.row];
+            cell.poiName.text = cell.searchAnnotation.title;
+            cell.poiName.textColor = [UIColor blackColor];
+            
+            [cell.favoriteButton setFavoriteButtonState:cell.searchAnnotation.favoriteState];
+            cell.favoriteButton.hidden = NO;
+            cell.userInteractionEnabled = YES;
             
         } else {
             cell.poiName.text = @"Star items to favorite";
             cell.poiName.textColor = [UIColor grayColor];
-            //TODO make italic
+            cell.favoriteButton.hidden = YES;
+            cell.userInteractionEnabled = NO;
         }
     
     } else {
         
-        MKMapItem *searchItem = [DataSource sharedInstance].searchResults.mapItems[indexPath.row];
-        cell.poiName.text = searchItem.name;
+        cell.searchAnnotation = [DataSource sharedInstance].searchResultsAnnotations[indexPath.row];
+        cell.poiName.text = cell.searchAnnotation.title;
+        [cell.favoriteButton setFavoriteButtonState:cell.searchAnnotation.favoriteState];
         
     }
     
@@ -122,8 +130,62 @@
 - (void) cellDidPressLikeButton:(POITableViewCell *)cell {
     NSLog(@"Favorite button pressed");
     
-    //If cell is in favorites, toggle favorites. If it's in search annotations, toggle from search annotations. Reload favorites table. 
+    [[DataSource sharedInstance] toggleFavoriteStatus:cell.searchAnnotation];
+    [cell.favoriteButton setFavoriteButtonState:cell.searchAnnotation.favoriteState];
 
 }
+
+#pragma mark - KVO
+
+- (void) observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
+    if (object == [DataSource sharedInstance] && [keyPath isEqualToString:@"favoriteLocations"]) {
+        
+        int kindOfChange = [change[NSKeyValueChangeKindKey] intValue];
+        
+        if (kindOfChange == NSKeyValueChangeSetting ||
+            kindOfChange == NSKeyValueChangeInsertion ||
+            kindOfChange == NSKeyValueChangeRemoval ||
+            kindOfChange == NSKeyValueChangeReplacement) {
+            //Someone set a brand new annotations array
+            [self.tableView reloadData];
+        } /*else if () {
+            //We have an incremental change: inserted, deleted, or replaced images.
+            
+            //Get a list of the index (or indices) that changed
+            NSIndexSet *indexSetOfChanges = change[NSKeyValueChangeIndexesKey];
+            
+            //Convert this NSIndexSet to an NSArray of NSIndexPaths (which is what the table view animation methods require)
+            NSMutableArray *indexPathsThatChanged = [NSMutableArray array];
+            [indexSetOfChanges enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop) {
+                NSIndexPath *newIndexPath = [NSIndexPath indexPathForRow:idx inSection:0];
+                [indexPathsThatChanged addObject:newIndexPath];
+            }];
+            
+            //Call 'beginUpdates' to tell the table view we're about to make changes
+            [self.tableView beginUpdates];
+            
+            //Tell the table view what the changes are
+            if (kindOfChange == NSKeyValueChangeInsertion) {
+                [self.tableView insertRowsAtIndexPaths:indexPathsThatChanged withRowAnimation:UITableViewRowAnimationAutomatic];
+            
+            } else if (kindOfChange == NSKeyValueChangeRemoval) {
+                [self.tableView deleteRowsAtIndexPaths:indexPathsThatChanged withRowAnimation:UITableViewRowAnimationAutomatic];
+
+            } else if (kindOfChange == NSKeyValueChangeReplacement) {
+                [self.tableView reloadRowsAtIndexPaths:indexPathsThatChanged withRowAnimation:UITableViewRowAnimationAutomatic];
+            }
+            
+            [self.tableView endUpdates];
+            [self.tableView reloadData];
+
+        }*/
+        
+    }
+}
+
+- (void) dealloc {
+    [[DataSource sharedInstance] removeObserver:self forKeyPath:@"favoriteLocations"];
+}
+
 
 @end
