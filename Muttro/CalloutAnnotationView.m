@@ -14,12 +14,19 @@ const float kCAAnnotationFrameWidth = 280.0;
 const float kCAAnnotationFrameHeight = 140.0;
 const float kCAAnnotationFrameOffsetX = 0.0;
 const float kCAAnnotationFrameOffsetY = 100.0;
-const float kCALabelHeight = 40.0;
+const float kCALabelHeight = 35.0;
+const float kCAButtonWidth = 35.0;
+const float kCAButtonSpacing = 6.0;
 
 @interface CalloutAnnotationView ()
 
 @property (nonatomic, strong) FavoritesButton *favoriteButton;
 @property (nonatomic, strong) UILabel *titleLabel;
+@property (nonatomic, strong) UIButton *phoneButton;
+@property (nonatomic, strong) UIButton *webButton;
+@property (nonatomic, strong) UIButton *mapButton;
+@property (nonatomic, strong) UITextView *annotationURL;
+@property (nonatomic, strong) UITextView *annotationPhoneNumber;
 
 @end
 
@@ -42,17 +49,57 @@ const float kCALabelHeight = 40.0;
         self.centerOffset = offset;
         self.layer.cornerRadius = 10.0;
         
-        //Add title
+        //Add title and information
         self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(10, 0, self.bounds.size.width - 50, kCALabelHeight)];
         self.titleLabel.text = self.searchAnnotation.title;
         [self addSubview:self.titleLabel];
         
+        CGRect urlFrame = CGRectMake(0, CGRectGetMaxY(self.titleLabel.frame), self.frame.size.width, kCALabelHeight);
+        self.annotationURL = [[UITextView alloc] initWithFrame:urlFrame];
+        self.annotationURL.backgroundColor = [UIColor colorWithRed:250/255.0 green:250/255.0 blue:250/255.0 alpha:1.0];
+        self.annotationURL.editable = NO;
+        if (self.searchAnnotation.phoneNumber != nil) {
+            self.annotationURL.text = [self.searchAnnotation.url absoluteString];
+        } else {
+            self.annotationURL.text = @"(no website listed)"; 
+        }
+        [self.annotationURL setDataDetectorTypes:UIDataDetectorTypeLink];
+        [self addSubview:self.annotationURL];
+        
+        CGRect phoneNumberFrame = CGRectMake(0, CGRectGetMaxY(self.annotationURL.frame), self.frame.size.width, kCALabelHeight - 5);
+        self.annotationPhoneNumber = [[UITextView alloc] initWithFrame:phoneNumberFrame];
+        self.annotationPhoneNumber.backgroundColor = [UIColor colorWithRed:250/255.0 green:250/255.0 blue:250/255.0 alpha:1.0];
+        self.annotationPhoneNumber.editable = NO;
+        if (self.searchAnnotation.phoneNumber != nil ) {
+            self.annotationPhoneNumber.text = self.searchAnnotation.phoneNumber;
+        } else {
+            self.annotationPhoneNumber.text = @"(no phone listed)";
+        }
+        [self.annotationPhoneNumber setDataDetectorTypes:UIDataDetectorTypePhoneNumber];
+        [self addSubview:self.annotationPhoneNumber];
+
         //Add favorites button
         self.favoriteButton = [[FavoritesButton alloc] init];
-        [self.favoriteButton setFavoriteButtonState:self.searchAnnotation.favoriteState]; 
-        self.favoriteButton.frame = CGRectMake(self.frame.size.width - 50, 0, 44, 44);
+        [self.favoriteButton setFavoriteButtonState:self.searchAnnotation.favoriteState];
+        self.favoriteButton.frame = CGRectMake(self.frame.size.width - 50, -5, 44, 44);
         [self.favoriteButton addTarget:self action:@selector(favoritePressed:) forControlEvents:UIControlEventTouchUpInside];
         [self addSubview:self.favoriteButton];
+        
+        self.phoneButton = [[UIButton alloc] initWithFrame:CGRectMake(self.bounds.size.width - kCAButtonWidth*3 - kCAButtonSpacing * 3, self.bounds.size.height - kCAButtonWidth - kCAButtonSpacing, kCAButtonWidth, kCAButtonWidth)];
+        [self.phoneButton setImage:[UIImage imageNamed:@"phone"] forState:UIControlStateNormal];
+        [self.phoneButton addTarget:self action:@selector(phonePressed:) forControlEvents:UIControlEventTouchUpInside];
+        [self addSubview:self.phoneButton];
+        
+        self.webButton = [[UIButton alloc] initWithFrame:CGRectMake(self.bounds.size.width - kCAButtonWidth * 2 - kCAButtonSpacing * 2, self.bounds.size.height - kCAButtonWidth - kCAButtonSpacing, kCAButtonWidth, kCAButtonWidth)];
+        [self.webButton setImage:[UIImage imageNamed:@"web"] forState:UIControlStateNormal];
+        [self.webButton addTarget:self action:@selector(webPressed:) forControlEvents:UIControlEventTouchUpInside];
+        [self addSubview:self.webButton];
+        
+        self.mapButton = [[UIButton alloc] initWithFrame:CGRectMake(self.bounds.size.width - kCAButtonWidth - kCAButtonSpacing, self.bounds.size.height - kCAButtonWidth - kCAButtonSpacing, kCAButtonWidth, kCAButtonWidth)];
+        [self.mapButton setImage:[UIImage imageNamed:@"directions"] forState:UIControlStateNormal];
+        [self.mapButton addTarget:self action:@selector(mapPressed:) forControlEvents:UIControlEventTouchUpInside];
+        [self addSubview:self.mapButton];
+
         
         //Create line divider in view
         UIBezierPath *path = [UIBezierPath bezierPath];
@@ -70,11 +117,23 @@ const float kCALabelHeight = 40.0;
     }
     
     return self;
-    
+
 }
 
 - (void) favoritePressed:(FavoritesButton *)sender {
-    [self.delegate didToggleFavoriteButton: self];
+    [self.delegate didPressFavoriteButton: self];
+}
+
+- (void) phonePressed:(UIButton *)sender {
+    [self.delegate didPressPhoneButton:self];
+}
+
+- (void) webPressed:(UIButton *)sender {
+    [self.delegate didPressWebButton:self];
+}
+
+- (void) mapPressed:(UIButton *)sender {
+    [self.delegate didPressMapButton:self]; 
 }
 
 

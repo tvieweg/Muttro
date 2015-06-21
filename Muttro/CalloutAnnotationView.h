@@ -12,7 +12,10 @@
 
 @protocol CalloutAnnotationViewDelegate <NSObject>
 
-- (void) didToggleFavoriteButton:(CalloutAnnotationView *)annotationView;
+- (void) didPressFavoriteButton:(CalloutAnnotationView *)annotationView;
+- (void) didPressPhoneButton:(CalloutAnnotationView *)annotationView;
+- (void) didPressWebButton:(CalloutAnnotationView *)annotationView;
+- (void) didPressMapButton:(CalloutAnnotationView *)annotationView; 
 
 @end
 

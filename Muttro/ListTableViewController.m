@@ -10,6 +10,9 @@
 #import "DataSource.h"
 #import "SearchAnnotation.h"
 #import "POITableViewCell.h"
+#import "AnnotationWebViewController.h"
+
+const double kPTMetersToMilesConversion = 0.000621371;
 
 @interface ListTableViewController () <POITableViewCellDelegate>
 
@@ -27,7 +30,7 @@
     UIBarButtonItem *mapButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"maps"] style:UIBarButtonItemStylePlain target:self action:@selector(mapTapped:)];
     
     self.navigationItem.hidesBackButton = YES;
-    
+    self.navigationItem.title = @"Muttro";
     self.navigationItem.leftBarButtonItem = mapButton;
 
 }
@@ -59,6 +62,8 @@
         return @"Search Results";
 }
 
+
+
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     POITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"POICell" forIndexPath:indexPath];
     
@@ -72,6 +77,12 @@
             cell.poiName.text = cell.searchAnnotation.title;
             cell.poiName.textColor = [UIColor blackColor];
             
+            [self setDistanceToPoiText:cell];
+            cell.distanceToPOI.hidden = NO;
+            cell.phoneButton.hidden = NO;
+            cell.webButton.hidden = NO;
+            cell.mapButton.hidden = NO;
+            
             [cell.favoriteButton setFavoriteButtonState:cell.searchAnnotation.favoriteState];
             cell.favoriteButton.hidden = NO;
             cell.userInteractionEnabled = YES;
@@ -79,7 +90,12 @@
         } else {
             cell.poiName.text = @"Star items to favorite";
             cell.poiName.textColor = [UIColor grayColor];
+            
             cell.favoriteButton.hidden = YES;
+            cell.distanceToPOI.hidden = YES;
+            cell.phoneButton.hidden = YES;
+            cell.webButton.hidden = YES;
+            cell.mapButton.hidden = YES;
             cell.userInteractionEnabled = NO;
         }
     
@@ -89,9 +105,29 @@
         cell.poiName.text = cell.searchAnnotation.title;
         [cell.favoriteButton setFavoriteButtonState:cell.searchAnnotation.favoriteState];
         
+        [self setDistanceToPoiText:cell];
+        
     }
     
+    cell.layoutMargins = UIEdgeInsetsZero;
+    
     return cell;
+}
+
+- (void)setDistanceToPoiText:(POITableViewCell *)cell {
+    NSString *textToDisplay = [NSString new];
+    CLLocationDistance distanceInMiles = cell.searchAnnotation.distanceToUser * kPTMetersToMilesConversion;
+    
+    if (distanceInMiles < 1.0) {
+        textToDisplay = @"<1 mi away";
+
+    } else if (distanceInMiles < 1.1) {
+        textToDisplay = @"1 mi away";
+    } else {
+        textToDisplay = [NSString stringWithFormat:@"%.01f mi away", distanceInMiles];
+    }
+    
+    cell.distanceToPOI.text = textToDisplay;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -100,15 +136,28 @@
         SearchAnnotation *tappedAnnotation = [DataSource sharedInstance].favoriteLocations[indexPath.row];
         [DataSource sharedInstance].lastTappedCoordinate = tappedAnnotation.coordinate;
         [DataSource sharedInstance].locationWasTapped = YES;
+        
     } else {
         MKMapItem *tappedMapItem = [DataSource sharedInstance].searchResults.mapItems[indexPath.row];
         [DataSource sharedInstance].lastTappedCoordinate = tappedMapItem.placemark.coordinate;
         [DataSource sharedInstance].locationWasTapped = YES;
     }
 
-    [self.navigationController popToRootViewControllerAnimated:YES];
-     
+    CATransition *transition = [CATransition animation];
+    transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionDefault];
+    transition.duration = 0.45;
+    [transition setType:kCATransitionPush];
+    transition.subtype = kCATransitionFromRight;
+    transition.delegate = self;
+    [self.navigationController.view.layer addAnimation:transition forKey:nil];
+    
+    self.navigationController.navigationBarHidden = NO;
+    [self.navigationController popToRootViewControllerAnimated:NO];
 
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return 110;
 }
 
 - (void) mapTapped:(UIBarButtonItem *)sender {
@@ -127,12 +176,64 @@
     
 }
 
+#pragma mark - POITableViewCellDelegate
+
 - (void) cellDidPressLikeButton:(POITableViewCell *)cell {
     NSLog(@"Favorite button pressed");
     
     [[DataSource sharedInstance] toggleFavoriteStatus:cell.searchAnnotation];
     [cell.favoriteButton setFavoriteButtonState:cell.searchAnnotation.favoriteState];
 
+}
+
+- (void) cellDidPressPhoneButton:(CalloutAnnotationView *)annotationView {
+    NSString *phoneURL = @"tel:";
+    if (annotationView.searchAnnotation.phoneNumber != nil) {
+        NSString *annotationPhoneNumber = [phoneURL stringByAppendingString:annotationView.searchAnnotation.phoneNumber];
+        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:annotationPhoneNumber]];
+    } else {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle: NSLocalizedString(@"Whoops!", @"Error")
+                                                        message: NSLocalizedString(@"These guys need a phone number!", @"No phone")
+                                                       delegate: nil
+                                              cancelButtonTitle: NSLocalizedString(@"OK", nil)
+                                              otherButtonTitles: nil];
+        
+        [alert show];
+    }
+}
+
+- (void) cellDidPressWebButton:(CalloutAnnotationView *)annotationView {
+    if (annotationView.searchAnnotation.url != nil) {
+        [DataSource sharedInstance].selectedAnnotationURL = annotationView.searchAnnotation.url;
+        AnnotationWebViewController *webVC = [[AnnotationWebViewController alloc] init];
+        [self.navigationController pushViewController:webVC animated:YES];
+    } else {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle: NSLocalizedString(@"Whoops!", @"Error")
+                                                        message: NSLocalizedString(@"No website here! We're off the grid now, Charlie", @"No website")
+                                                       delegate: nil
+                                              cancelButtonTitle: NSLocalizedString(@"OK", nil)
+                                              otherButtonTitles: nil];
+        
+        [alert show];
+        
+    }
+}
+
+- (void) cellDidPressMapButton:(CalloutAnnotationView *)annotationView {
+    // Check for iOS 6
+    Class mapItemClass = [MKMapItem class];
+    if (mapItemClass && [mapItemClass respondsToSelector:@selector(openMapsWithItems:launchOptions:)])
+    {
+        // Create an MKMapItem to pass to the Maps app
+        CLLocationCoordinate2D coordinate = annotationView.searchAnnotation.coordinate;
+        MKPlacemark *placemark = [[MKPlacemark alloc] initWithCoordinate:coordinate
+                                                       addressDictionary:nil];
+        MKMapItem *mapItem = [[MKMapItem alloc] initWithPlacemark:placemark];
+        [mapItem setName:annotationView.searchAnnotation.title];
+        // Pass the map item to the Maps app
+        [mapItem openInMapsWithLaunchOptions:nil];
+    }
+    
 }
 
 #pragma mark - KVO
@@ -148,38 +249,8 @@
             kindOfChange == NSKeyValueChangeReplacement) {
             //Someone set a brand new annotations array
             [self.tableView reloadData];
-        } /*else if () {
-            //We have an incremental change: inserted, deleted, or replaced images.
-            
-            //Get a list of the index (or indices) that changed
-            NSIndexSet *indexSetOfChanges = change[NSKeyValueChangeIndexesKey];
-            
-            //Convert this NSIndexSet to an NSArray of NSIndexPaths (which is what the table view animation methods require)
-            NSMutableArray *indexPathsThatChanged = [NSMutableArray array];
-            [indexSetOfChanges enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop) {
-                NSIndexPath *newIndexPath = [NSIndexPath indexPathForRow:idx inSection:0];
-                [indexPathsThatChanged addObject:newIndexPath];
-            }];
-            
-            //Call 'beginUpdates' to tell the table view we're about to make changes
-            [self.tableView beginUpdates];
-            
-            //Tell the table view what the changes are
-            if (kindOfChange == NSKeyValueChangeInsertion) {
-                [self.tableView insertRowsAtIndexPaths:indexPathsThatChanged withRowAnimation:UITableViewRowAnimationAutomatic];
-            
-            } else if (kindOfChange == NSKeyValueChangeRemoval) {
-                [self.tableView deleteRowsAtIndexPaths:indexPathsThatChanged withRowAnimation:UITableViewRowAnimationAutomatic];
 
-            } else if (kindOfChange == NSKeyValueChangeReplacement) {
-                [self.tableView reloadRowsAtIndexPaths:indexPathsThatChanged withRowAnimation:UITableViewRowAnimationAutomatic];
-            }
-            
-            [self.tableView endUpdates];
-            [self.tableView reloadData];
-
-        }*/
-        
+        }
     }
 }
 

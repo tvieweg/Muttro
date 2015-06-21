@@ -24,6 +24,10 @@ typedef void (^SearchCompletionBlock)(NSError *error);
 @property (nonatomic, assign) BOOL locationWasTapped;
 @property (nonatomic, strong, readonly) NSMutableArray *favoriteLocations;
 
+@property (nonatomic, strong) NSURL *selectedAnnotationURL; 
+
+@property (nonatomic, strong) CLLocation *currentLocation;
+
 - (void) deleteFavoriteItem:(SearchAnnotation *)item;
 
 +(instancetype) sharedInstance;

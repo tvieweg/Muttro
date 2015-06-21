@@ -17,6 +17,7 @@
 @property (copy, nonatomic) NSString *subtitle;
 @property (nonatomic, copy) NSString *phoneNumber;
 @property (nonatomic, strong) NSURL *url;
+@property (nonatomic, assign) CLLocationDistance distanceToUser;
 
 @property (nonatomic, assign) FavoriteState favoriteState;
 

@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		712F059E88698CED9B196AEE /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 13AD414CB3B117EA43AB66E8 /* libPods.a */; };
 		B1250A871B2CD1B700AAB9FC /* POITableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = B1250A861B2CD1B700AAB9FC /* POITableViewCell.m */; };
+		B142C7F41B33BECE002E01B4 /* AnnotationWebViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B142C7F31B33BECE002E01B4 /* AnnotationWebViewController.m */; };
 		B156A3A01B2555DB000529AD /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = B156A39F1B2555DB000529AD /* main.m */; };
 		B156A3A31B2555DB000529AD /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = B156A3A21B2555DB000529AD /* AppDelegate.m */; };
 		B156A3A61B2555DB000529AD /* MapViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B156A3A51B2555DB000529AD /* MapViewController.m */; };
@@ -42,6 +43,8 @@
 		A5FC62240C85BC10A8DB7558 /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
 		B1250A851B2CD1B700AAB9FC /* POITableViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = POITableViewCell.h; sourceTree = "<group>"; };
 		B1250A861B2CD1B700AAB9FC /* POITableViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = POITableViewCell.m; sourceTree = "<group>"; };
+		B142C7F21B33BECE002E01B4 /* AnnotationWebViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AnnotationWebViewController.h; sourceTree = "<group>"; };
+		B142C7F31B33BECE002E01B4 /* AnnotationWebViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AnnotationWebViewController.m; sourceTree = "<group>"; };
 		B156A39A1B2555DB000529AD /* Muttro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Muttro.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B156A39E1B2555DB000529AD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B156A39F1B2555DB000529AD /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -147,6 +150,8 @@
 				B162E1BA1B2AAB5900918DF9 /* FavoritesButton.m */,
 				B156A3A11B2555DB000529AD /* AppDelegate.h */,
 				B156A3A21B2555DB000529AD /* AppDelegate.m */,
+				B142C7F21B33BECE002E01B4 /* AnnotationWebViewController.h */,
+				B142C7F31B33BECE002E01B4 /* AnnotationWebViewController.m */,
 				B156A3A41B2555DB000529AD /* MapViewController.h */,
 				B156A3A51B2555DB000529AD /* MapViewController.m */,
 				B1AA4E9B1B320CB90050E57C /* QuickSearchToolbar.h */,
@@ -331,6 +336,7 @@
 				B1B3D2CB1B28991600E2A567 /* SearchAnnotation.m in Sources */,
 				B1B3D2D11B28B63F00E2A567 /* CalloutAnnotation.m in Sources */,
 				B156A3A61B2555DB000529AD /* MapViewController.m in Sources */,
+				B142C7F41B33BECE002E01B4 /* AnnotationWebViewController.m in Sources */,
 				B162E1BE1B2B853D00918DF9 /* CalloutAnnotationView.m in Sources */,
 				B162E1BB1B2AAB5900918DF9 /* FavoritesButton.m in Sources */,
 				B156A3A31B2555DB000529AD /* AppDelegate.m in Sources */,

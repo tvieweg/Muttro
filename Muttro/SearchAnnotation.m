@@ -7,6 +7,7 @@
 //
 
 #import "SearchAnnotation.h"
+#import "DataSource.h"
 
 @implementation SearchAnnotation
 
@@ -18,7 +19,7 @@
         _coordinate = [[mapItem placemark] coordinate];
         _phoneNumber = [mapItem phoneNumber];
         _url = [mapItem url];
-        _favoriteState = FavoriteStateNotFavorited; 
+        _favoriteState = FavoriteStateNotFavorited;
 
     }
     return self; 
@@ -42,7 +43,7 @@
     annotationView.enabled = YES;
     annotationView.canShowCallout = NO;
     if(self.favoriteState == FavoriteStateFavorited) {
-        annotationView.image = [UIImage imageNamed:@"pawprint-yellow"];
+        annotationView.image = [UIImage imageNamed:@"pawprint-coral"];
     } else {
         annotationView.image = [UIImage imageNamed:@"pawprint"];
     }

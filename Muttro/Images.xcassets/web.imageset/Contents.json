@@ -3,17 +3,17 @@
     {
       "idiom" : "universal",
       "scale" : "1x",
-      "filename" : "pawprint-yellow.png"
+      "filename" : "web.png"
     },
     {
       "idiom" : "universal",
       "scale" : "2x",
-      "filename" : "pawprint-yellow@2x.png"
+      "filename" : "web@2x.png"
     },
     {
       "idiom" : "universal",
       "scale" : "3x",
-      "filename" : "pawprint-yellow@3x.png"
+      "filename" : "web@3x.png"
     }
   ],
   "info" : {

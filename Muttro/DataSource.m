@@ -7,7 +7,6 @@
 //
 
 
-//TODO: Refactor framework: DataSource should be broken up into searches (which will include recent searches), and POIs saved by the user.
 
 #import "DataSource.h"
 
@@ -186,6 +185,11 @@ const float kCoordinateEpsilon = 0.005;
     [self.searchResultsAnnotations removeAllObjects];
     for (MKMapItem *mapItem in mapItems) {
         SearchAnnotation *annotation = [[SearchAnnotation alloc] initWithMapItem:mapItem];
+        CLLocation *annotationLocation = [[CLLocation alloc] initWithLatitude:
+                                          mapItem.placemark.coordinate.latitude
+                                                                    longitude:
+                                          mapItem.placemark.coordinate.longitude];
+        annotation.distanceToUser = [_currentLocation distanceFromLocation:annotationLocation];
         
         [self.searchResultsAnnotations addObject:annotation];
         
