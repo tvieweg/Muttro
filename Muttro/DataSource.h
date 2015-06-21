@@ -36,6 +36,8 @@ typedef void (^SearchCompletionBlock)(NSError *error);
 
 - (void) toggleFavoriteStatus:(SearchAnnotation *)annotation;
 
-- (NSMutableArray *) checkFavoritesAgainstSearchAndRemoveDuplicates; 
+- (NSMutableArray *) checkFavoritesAgainstSearchAndRemoveDuplicates;
+
+- (CLLocationDistance) findDistanceFromUser:(SearchAnnotation *)annotation; 
 
 @end

@@ -186,14 +186,22 @@ const float kCoordinateEpsilon = 0.005;
     for (MKMapItem *mapItem in mapItems) {
         SearchAnnotation *annotation = [[SearchAnnotation alloc] initWithMapItem:mapItem];
         CLLocation *annotationLocation = [[CLLocation alloc] initWithLatitude:
-                                          mapItem.placemark.coordinate.latitude
+                                          annotation.coordinate.latitude
                                                                     longitude:
-                                          mapItem.placemark.coordinate.longitude];
+                                          annotation.coordinate.longitude];
         annotation.distanceToUser = [_currentLocation distanceFromLocation:annotationLocation];
         
         [self.searchResultsAnnotations addObject:annotation];
         
     }
+}
+
+- (CLLocationDistance) findDistanceFromUser:(SearchAnnotation *)annotation {
+    CLLocation *annotationLocation = [[CLLocation alloc] initWithLatitude:
+                                      annotation.coordinate.latitude
+                                                                longitude:
+                                      annotation.coordinate.longitude];
+    return [_currentLocation distanceFromLocation:annotationLocation];
 }
 
 #pragma mark - Favorite toggling
