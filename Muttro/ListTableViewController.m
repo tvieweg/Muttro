@@ -82,6 +82,8 @@ const double kPTMetersToMilesConversion = 0.000621371;
             cell.phoneButton.hidden = NO;
             cell.webButton.hidden = NO;
             cell.mapButton.hidden = NO;
+            cell.categoryImage.hidden = NO;
+            [self setImageForCellCategoryButton:cell];
             
             [cell.favoriteButton setFavoriteButtonState:cell.searchAnnotation.favoriteState];
             cell.favoriteButton.hidden = NO;
@@ -91,6 +93,7 @@ const double kPTMetersToMilesConversion = 0.000621371;
             cell.poiName.text = @"Star items to favorite";
             cell.poiName.textColor = [UIColor grayColor];
             
+            cell.categoryImage.hidden = YES;
             cell.favoriteButton.hidden = YES;
             cell.distanceToPOI.hidden = YES;
             cell.phoneButton.hidden = YES;
@@ -104,6 +107,7 @@ const double kPTMetersToMilesConversion = 0.000621371;
         cell.searchAnnotation = [DataSource sharedInstance].searchResultsAnnotations[indexPath.row];
         cell.poiName.text = cell.searchAnnotation.title;
         [cell.favoriteButton setFavoriteButtonState:cell.searchAnnotation.favoriteState];
+        [self setImageForCellCategoryButton:cell];
         
         [self setDistanceToPoiText:cell];
         
@@ -113,6 +117,36 @@ const double kPTMetersToMilesConversion = 0.000621371;
     
     return cell;
 }
+
+- (void) setImageForCellCategoryButton:(POITableViewCell *)cell {
+    if(cell.searchAnnotation.favoriteState == FavoriteStateFavorited) {
+        switch (cell.searchAnnotation.favoriteCategory) {
+            case FavoriteCategoryNoCategory:
+                cell.categoryImage.image = [UIImage imageNamed:@"pawprint-coral"];
+                break;
+            case FavoriteCategoryPark:
+                cell.categoryImage.image = [UIImage imageNamed:@"park"];
+                break;
+            case FavoriteCategoryGroomers:
+                cell.categoryImage.image = [UIImage imageNamed:@"grooming"];
+                break;
+            case FavoriteCategoryPetStore:
+                cell.categoryImage.image = [UIImage imageNamed:@"petstore"];
+                break;
+            case FavoriteCategoryDayCare:
+                cell.categoryImage.image = [UIImage imageNamed:@"daycare"];
+                break;
+            case FavoriteCategoryVet:
+                cell.categoryImage.image = [UIImage imageNamed:@"vet"];
+                break;
+            default:
+                break;
+        }
+    } else {
+        cell.categoryImage.image = [UIImage imageNamed:@"pawprint"];
+    }
+}
+
 
 - (void)setDistanceToPoiText:(POITableViewCell *)cell {
     cell.searchAnnotation.distanceToUser = [[DataSource sharedInstance] findDistanceFromUser:cell.searchAnnotation];

@@ -19,15 +19,18 @@
     
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
+        
         //Initialization code
         self.favoriteButton = [[FavoritesButton alloc] init];
-        self.favoriteButton.frame = CGRectMake(0, 5 , 44, 44);
         self.favoriteButton.contentVerticalAlignment = UIControlContentVerticalAlignmentCenter;
         [self.favoriteButton addTarget:self action:@selector(favoritePressed:) forControlEvents:UIControlEventTouchUpInside];
         [self addSubview:self.favoriteButton];
         
+        self.categoryImage = [[UIImageView alloc] initWithFrame:CGRectMake(2, 10, 40, 40)];
+        [self addSubview:self.categoryImage];
+        
         self.poiName = [[UILabel alloc] init];
-        self.poiName.frame = CGRectMake(44, 2, self.frame.size.width - 44, 44);
+        self.poiName.frame = CGRectMake(48, 7, self.frame.size.width - 44, 44);
         self.poiName.numberOfLines = 0;
         [self addSubview:self.poiName];
         
@@ -62,7 +65,9 @@
     CGFloat buttonWidth = 30;
     CGFloat buttonSpacing = 35;
     CGFloat buttonOriginX = self.frame.size.width - buttonSpacing - 5;
-    CGFloat buttonOriginY = self.frame.size.height / 2 - buttonWidth / 2;
+    CGFloat buttonOriginY = CGRectGetMaxY(self.poiName.frame) + 10;
+    
+    self.favoriteButton.frame = CGRectMake(CGRectGetMaxX(self.frame) - 50, 5 , 44, 44);
     
     NSArray *buttons = @[self.mapButton, self.webButton, self.phoneButton];
     for (UIButton *button in buttons) {

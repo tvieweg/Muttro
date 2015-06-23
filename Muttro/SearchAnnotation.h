@@ -10,6 +10,15 @@
 #import <MapKit/MapKit.h>
 #import "FavoritesButton.h"
 
+typedef NS_ENUM(NSInteger, FavoriteCategory) {
+    FavoriteCategoryNoCategory      = 0,
+    FavoriteCategoryPark            = 1,
+    FavoriteCategoryVet             = 2,
+    FavoriteCategoryGroomers        = 3,
+    FavoriteCategoryDayCare         = 4,
+    FavoriteCategoryPetStore        = 5
+};
+
 @interface SearchAnnotation : NSObject <MKAnnotation, NSCoding>
 
 @property (nonatomic, assign) CLLocationCoordinate2D coordinate;
@@ -20,6 +29,7 @@
 @property (nonatomic, assign) CLLocationDistance distanceToUser;
 
 @property (nonatomic, assign) FavoriteState favoriteState;
+@property (nonatomic, assign) FavoriteCategory favoriteCategory;
 
 - (void)setCoordinate:(CLLocationCoordinate2D)newCoordinate;
 

@@ -20,6 +20,7 @@
         _phoneNumber = [mapItem phoneNumber];
         _url = [mapItem url];
         _favoriteState = FavoriteStateNotFavorited;
+        _favoriteCategory = FavoriteCategoryNoCategory;
 
     }
     return self; 
@@ -43,7 +44,28 @@
     annotationView.enabled = YES;
     annotationView.canShowCallout = NO;
     if(self.favoriteState == FavoriteStateFavorited) {
-        annotationView.image = [UIImage imageNamed:@"pawprint-coral"];
+        switch (self.favoriteCategory) {
+            case FavoriteCategoryNoCategory:
+                annotationView.image = [UIImage imageNamed:@"pawprint-coral"];
+                break;
+            case FavoriteCategoryPark:
+                annotationView.image = [UIImage imageNamed:@"park"];
+                break;
+            case FavoriteCategoryGroomers:
+                annotationView.image = [UIImage imageNamed:@"grooming"];
+                break;
+            case FavoriteCategoryPetStore:
+                annotationView.image = [UIImage imageNamed:@"petstore"];
+                break;
+            case FavoriteCategoryDayCare:
+                annotationView.image = [UIImage imageNamed:@"daycare"];
+                break;
+            case FavoriteCategoryVet:
+                annotationView.image = [UIImage imageNamed:@"vet"];
+                break;
+            default:
+                break;
+        }
     } else {
         annotationView.image = [UIImage imageNamed:@"pawprint"];
     }
@@ -59,6 +81,7 @@
     [aCoder encodeObject:self.phoneNumber forKey:NSStringFromSelector(@selector(phoneNumber))];
     [aCoder encodeObject:self.url forKey:NSStringFromSelector(@selector(url))];
     [aCoder encodeInt:self.favoriteState forKey:NSStringFromSelector(@selector(favoriteState))];
+    [aCoder encodeInt:self.favoriteCategory forKey:NSStringFromSelector(@selector(favoriteCategory))];
     [aCoder encodeDouble:self.coordinate.latitude forKey:@"latitude"];
     [aCoder encodeDouble:self.coordinate.longitude forKey:@"longitude"];
 
@@ -73,6 +96,7 @@
         _phoneNumber = [aDecoder decodeObjectForKey:NSStringFromSelector(@selector(phoneNumber))];
         _url = [aDecoder decodeObjectForKey:NSStringFromSelector(@selector(url))];
         _favoriteState = [aDecoder decodeIntForKey:NSStringFromSelector(@selector(favoriteState))];
+        _favoriteCategory = [aDecoder decodeIntForKey:NSStringFromSelector(@selector(favoriteCategory))];
         CLLocationDegrees latitude = [aDecoder decodeDoubleForKey:@"latitude"];
         CLLocationDegrees longitude = [aDecoder decodeDoubleForKey:@"longitude"];
         _coordinate = CLLocationCoordinate2DMake(latitude, longitude);

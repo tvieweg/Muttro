@@ -83,8 +83,6 @@ const float kMaxEpsilon = 0.005;
     //init Bar Buttons
     UIBarButtonItem *locationButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"location"] style:UIBarButtonItemStylePlain target:self action:@selector(locationTapped:)];
     
-    UIBarButtonItem *filterButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"filter"] style:UIBarButtonItemStylePlain target:self action:@selector(filterTapped:)];
-    
     UIBarButtonItem *listButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"list"] style:UIBarButtonItemStylePlain target:self action:@selector(listTapped:)];
     
     //init Gesture Recognizer
@@ -97,7 +95,7 @@ const float kMaxEpsilon = 0.005;
     
     //add Subviews
     [self.view addGestureRecognizer:tap];
-    self.navigationItem.rightBarButtonItems = @[filterButton, locationButton];
+    self.navigationItem.rightBarButtonItem = locationButton; 
     self.navigationItem.leftBarButtonItem = listButton;
     self.navigationItem.title = @"Muttro"; 
     [self.view addSubview:self.mapView];
@@ -237,7 +235,30 @@ const float kMaxEpsilon = 0.005;
             //Set image when annotation is being reused. 
             SearchAnnotation *tmpAnnotation = (SearchAnnotation *)annotation;
             if(tmpAnnotation.favoriteState == FavoriteStateFavorited) {
-                annotationView.image = [UIImage imageNamed:@"pawprint-coral"];
+                UIImage *tmpImage = [[UIImage alloc] init]; 
+                switch (tmpAnnotation.favoriteCategory) {
+                    case FavoriteCategoryNoCategory:
+                        tmpImage = [UIImage imageNamed:@"pawprint-coral"];
+                        break;
+                    case FavoriteCategoryPark:
+                        tmpImage = [UIImage imageNamed:@"park"];
+                        break;
+                    case FavoriteCategoryGroomers:
+                        tmpImage = [UIImage imageNamed:@"grooming"];
+                        break;
+                    case FavoriteCategoryPetStore:
+                        tmpImage = [UIImage imageNamed:@"petstore"];
+                        break;
+                    case FavoriteCategoryDayCare:
+                        tmpImage = [UIImage imageNamed:@"daycare"];
+                        break;
+                    case FavoriteCategoryVet:
+                        tmpImage = [UIImage imageNamed:@"vet"];
+                        break;
+                    default:
+                        break;
+                }
+                annotationView.image = tmpImage;
             } else {
                 annotationView.image = [UIImage imageNamed:@"pawprint"];
             }
@@ -470,6 +491,46 @@ const float kMaxEpsilon = 0.005;
     }
     
 }
+
+- (void) categoryWasChanged:(NSInteger)category forCalloutView:(CalloutAnnotationView *)annotationView {
+    annotationView.searchAnnotation.favoriteCategory = category;
+    [[DataSource sharedInstance] setFavoriteCategory:annotationView.searchAnnotation toCategory:category];
+    [annotationView setImageForCategoryButton];
+    
+    UIImage *tmpImage = [[UIImage alloc] init];
+    
+    if(annotationView.searchAnnotation.favoriteState == FavoriteStateFavorited) {
+        switch (annotationView.searchAnnotation.favoriteCategory) {
+            case FavoriteCategoryNoCategory:
+                tmpImage = [UIImage imageNamed:@"pawprint-coral"];
+                break;
+            case FavoriteCategoryPark:
+                tmpImage = [UIImage imageNamed:@"park"];
+                break;
+            case FavoriteCategoryGroomers:
+                tmpImage = [UIImage imageNamed:@"grooming"];
+                break;
+            case FavoriteCategoryPetStore:
+                tmpImage = [UIImage imageNamed:@"petstore"];
+                break;
+            case FavoriteCategoryDayCare:
+                tmpImage = [UIImage imageNamed:@"daycare"];
+                break;
+            case FavoriteCategoryVet:
+                tmpImage = [UIImage imageNamed:@"vet"];
+                break;
+            default:
+                break;
+        }
+    } else {
+        
+        tmpImage = [UIImage imageNamed:@"pawprint"];
+    }
+    
+    [self.mapView viewForAnnotation:annotationView.searchAnnotation].image = tmpImage;
+}
+
+
 
 #pragma mark - QuickSearchToolbarDelegate
 

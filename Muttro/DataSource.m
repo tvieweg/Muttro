@@ -237,6 +237,29 @@ const float kCoordinateEpsilon = 0.005;
     });
 }
 
+- (void) setFavoriteCategory:(SearchAnnotation *)annotation toCategory:(NSInteger)category {
+    
+    NSInteger index = [self.favoriteLocations indexOfObject:annotation];
+    annotation.favoriteCategory = category; 
+    [self replaceObjectInFavoriteLocationsAtIndex:index withObject:annotation];
+    
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        NSUInteger numberOfItemsToSave = MIN(self.favoriteLocations.count, 50);
+        NSArray *favoritesToSave = [self.favoriteLocations subarrayWithRange:NSMakeRange(0, numberOfItemsToSave)];
+        
+        NSString *fullPath = [self pathForFilename:NSStringFromSelector(@selector(favoriteLocations))];
+        NSData *favoriteData = [NSKeyedArchiver archivedDataWithRootObject:favoritesToSave];
+        
+        NSError *dataError;
+        BOOL wroteSuccessfully = [favoriteData writeToFile:fullPath options:NSDataWritingAtomic | NSDataWritingFileProtectionCompleteUnlessOpen error:&dataError];
+        
+        if (!wroteSuccessfully) {
+            NSLog(@"Couldn't write file: %@", dataError);
+        }
+    });
+
+}
+
 #pragma mark - Filepath definition
 
 - (NSString *) pathForFilename:(NSString *) filename {

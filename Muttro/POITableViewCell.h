@@ -34,6 +34,7 @@
 @property (nonatomic, strong) UIButton *phoneButton;
 @property (nonatomic, strong) UIButton *webButton;
 @property (nonatomic, strong) UIButton *mapButton;
+@property (nonatomic, strong) UIImageView *categoryImage;
 
 @property (nonatomic, weak) id <POITableViewCellDelegate> delegate;
 
