@@ -409,7 +409,34 @@ const float kMaxEpsilon = 0.005;
     if (annotationView.searchAnnotation.favoriteState == FavoriteStateFavorited) {
         
         //Update annotation marker and refresh callout view.
-        [self.mapView viewForAnnotation:annotationView.searchAnnotation].image = [UIImage imageNamed:@"pawprint-coral"];
+        
+        UIImage *tmpImage = [[UIImage alloc] init];
+        
+        switch (annotationView.searchAnnotation.favoriteCategory) {
+            case FavoriteCategoryNoCategory:
+                tmpImage = [UIImage imageNamed:@"pawprint-coral"];
+                break;
+            case FavoriteCategoryPark:
+                tmpImage = [UIImage imageNamed:@"park"];
+                break;
+            case FavoriteCategoryGroomers:
+                tmpImage = [UIImage imageNamed:@"grooming"];
+                break;
+            case FavoriteCategoryPetStore:
+                tmpImage = [UIImage imageNamed:@"petstore"];
+                break;
+            case FavoriteCategoryDayCare:
+                tmpImage = [UIImage imageNamed:@"daycare"];
+                break;
+            case FavoriteCategoryVet:
+                tmpImage = [UIImage imageNamed:@"vet"];
+                break;
+            default:
+                break;
+        }
+
+        [self.mapView viewForAnnotation:annotationView.searchAnnotation].image = tmpImage;
+        
         [self mapView:self.mapView didSelectAnnotationView:[annotationView.searchAnnotation annotationView]];
         
     } else if (annotationView.searchAnnotation.favoriteState == FavoriteStateNotFavorited) {
