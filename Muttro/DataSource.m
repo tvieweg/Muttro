@@ -7,7 +7,6 @@
 //
 
 
-//TODO: Refactor framework: DataSource should be broken up into searches (which will include recent searches), and POIs saved by the user.
 
 #import "DataSource.h"
 
@@ -186,10 +185,23 @@ const float kCoordinateEpsilon = 0.005;
     [self.searchResultsAnnotations removeAllObjects];
     for (MKMapItem *mapItem in mapItems) {
         SearchAnnotation *annotation = [[SearchAnnotation alloc] initWithMapItem:mapItem];
+        CLLocation *annotationLocation = [[CLLocation alloc] initWithLatitude:
+                                          annotation.coordinate.latitude
+                                                                    longitude:
+                                          annotation.coordinate.longitude];
+        annotation.distanceToUser = [_currentLocation distanceFromLocation:annotationLocation];
         
         [self.searchResultsAnnotations addObject:annotation];
         
     }
+}
+
+- (CLLocationDistance) findDistanceFromUser:(SearchAnnotation *)annotation {
+    CLLocation *annotationLocation = [[CLLocation alloc] initWithLatitude:
+                                      annotation.coordinate.latitude
+                                                                longitude:
+                                      annotation.coordinate.longitude];
+    return [_currentLocation distanceFromLocation:annotationLocation];
 }
 
 #pragma mark - Favorite toggling
@@ -223,6 +235,29 @@ const float kCoordinateEpsilon = 0.005;
             NSLog(@"Couldn't write file: %@", dataError);
         }
     });
+}
+
+- (void) setFavoriteCategory:(SearchAnnotation *)annotation toCategory:(NSInteger)category {
+    
+    NSInteger index = [self.favoriteLocations indexOfObject:annotation];
+    annotation.favoriteCategory = category; 
+    [self replaceObjectInFavoriteLocationsAtIndex:index withObject:annotation];
+    
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        NSUInteger numberOfItemsToSave = MIN(self.favoriteLocations.count, 50);
+        NSArray *favoritesToSave = [self.favoriteLocations subarrayWithRange:NSMakeRange(0, numberOfItemsToSave)];
+        
+        NSString *fullPath = [self pathForFilename:NSStringFromSelector(@selector(favoriteLocations))];
+        NSData *favoriteData = [NSKeyedArchiver archivedDataWithRootObject:favoritesToSave];
+        
+        NSError *dataError;
+        BOOL wroteSuccessfully = [favoriteData writeToFile:fullPath options:NSDataWritingAtomic | NSDataWritingFileProtectionCompleteUnlessOpen error:&dataError];
+        
+        if (!wroteSuccessfully) {
+            NSLog(@"Couldn't write file: %@", dataError);
+        }
+    });
+
 }
 
 #pragma mark - Filepath definition

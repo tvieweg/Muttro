@@ -7,6 +7,7 @@
 //
 
 #import "SearchAnnotation.h"
+#import "DataSource.h"
 
 @implementation SearchAnnotation
 
@@ -18,7 +19,8 @@
         _coordinate = [[mapItem placemark] coordinate];
         _phoneNumber = [mapItem phoneNumber];
         _url = [mapItem url];
-        _favoriteState = FavoriteStateNotFavorited; 
+        _favoriteState = FavoriteStateNotFavorited;
+        _favoriteCategory = FavoriteCategoryNoCategory;
 
     }
     return self; 
@@ -42,7 +44,10 @@
     annotationView.enabled = YES;
     annotationView.canShowCallout = NO;
     if(self.favoriteState == FavoriteStateFavorited) {
-        annotationView.image = [UIImage imageNamed:@"pawprint-yellow"];
+        UIImage *tmpImage = [[UIImage alloc] init];
+        [self setImageForFavoriteCategory:self.favoriteCategory];
+        annotationView.image = tmpImage;
+        
     } else {
         annotationView.image = [UIImage imageNamed:@"pawprint"];
     }
@@ -50,6 +55,31 @@
     return annotationView; 
 }
 
+- (UIImage *) setImageForFavoriteCategory:(NSInteger)favoriteCategory {
+    switch (favoriteCategory) {
+        case FavoriteCategoryNoCategory:
+            return [UIImage imageNamed:@"pawprint-coral"];
+            break;
+        case FavoriteCategoryPark:
+            return [UIImage imageNamed:@"park"];
+            break;
+        case FavoriteCategoryGroomers:
+            return [UIImage imageNamed:@"grooming"];
+            break;
+        case FavoriteCategoryPetStore:
+            return [UIImage imageNamed:@"petstore"];
+            break;
+        case FavoriteCategoryDayCare:
+            return [UIImage imageNamed:@"daycare"];
+            break;
+        case FavoriteCategoryVet:
+            return [UIImage imageNamed:@"vet"];
+            break;
+        default:
+            return [UIImage imageNamed:@"pawprint"];
+            break;
+    }
+}
 
 #pragma mark - NSCoding
 
@@ -58,6 +88,7 @@
     [aCoder encodeObject:self.phoneNumber forKey:NSStringFromSelector(@selector(phoneNumber))];
     [aCoder encodeObject:self.url forKey:NSStringFromSelector(@selector(url))];
     [aCoder encodeInt:self.favoriteState forKey:NSStringFromSelector(@selector(favoriteState))];
+    [aCoder encodeInt:self.favoriteCategory forKey:NSStringFromSelector(@selector(favoriteCategory))];
     [aCoder encodeDouble:self.coordinate.latitude forKey:@"latitude"];
     [aCoder encodeDouble:self.coordinate.longitude forKey:@"longitude"];
 
@@ -72,6 +103,7 @@
         _phoneNumber = [aDecoder decodeObjectForKey:NSStringFromSelector(@selector(phoneNumber))];
         _url = [aDecoder decodeObjectForKey:NSStringFromSelector(@selector(url))];
         _favoriteState = [aDecoder decodeIntForKey:NSStringFromSelector(@selector(favoriteState))];
+        _favoriteCategory = [aDecoder decodeIntForKey:NSStringFromSelector(@selector(favoriteCategory))];
         CLLocationDegrees latitude = [aDecoder decodeDoubleForKey:@"latitude"];
         CLLocationDegrees longitude = [aDecoder decodeDoubleForKey:@"longitude"];
         _coordinate = CLLocationCoordinate2DMake(latitude, longitude);

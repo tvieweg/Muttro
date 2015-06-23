@@ -16,6 +16,7 @@
 #import "CalloutAnnotation.h"
 #import "CalloutAnnotationView.h"
 #import "QuickSearchToolbar.h"
+#import "AnnotationWebViewController.h"
 
 const float kDistanceThreshold = 200;
 const float kMaxTimeBetweenMapUpdates = 15.0;
@@ -82,8 +83,6 @@ const float kMaxEpsilon = 0.005;
     //init Bar Buttons
     UIBarButtonItem *locationButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"location"] style:UIBarButtonItemStylePlain target:self action:@selector(locationTapped:)];
     
-    UIBarButtonItem *filterButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"filter"] style:UIBarButtonItemStylePlain target:self action:@selector(filterTapped:)];
-    
     UIBarButtonItem *listButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"list"] style:UIBarButtonItemStylePlain target:self action:@selector(listTapped:)];
     
     //init Gesture Recognizer
@@ -96,8 +95,9 @@ const float kMaxEpsilon = 0.005;
     
     //add Subviews
     [self.view addGestureRecognizer:tap];
-    self.navigationItem.rightBarButtonItems = @[filterButton, locationButton];
+    self.navigationItem.rightBarButtonItem = locationButton; 
     self.navigationItem.leftBarButtonItem = listButton;
+    self.navigationItem.title = @"Muttro"; 
     [self.view addSubview:self.mapView];
     [self.view addSubview:self.searchBar];
     [self.view addSubview:self.quickSearchToolbar];
@@ -202,6 +202,7 @@ const float kMaxEpsilon = 0.005;
             //We aren't looking at a location tapped from the list view.
             CLLocationCoordinate2D mapCenter = CLLocationCoordinate2DMake(location.coordinate.latitude, location.coordinate.longitude);
             [self setMapRegionToLocation:mapCenter withSpanRange:kMapSpan];
+            [DataSource sharedInstance].currentLocation = location; 
         }
     }
     
@@ -234,7 +235,9 @@ const float kMaxEpsilon = 0.005;
             //Set image when annotation is being reused. 
             SearchAnnotation *tmpAnnotation = (SearchAnnotation *)annotation;
             if(tmpAnnotation.favoriteState == FavoriteStateFavorited) {
-                annotationView.image = [UIImage imageNamed:@"pawprint-yellow"];
+                UIImage *tmpImage = [[UIImage alloc] init]; 
+                tmpImage = [tmpAnnotation setImageForFavoriteCategory:tmpAnnotation.favoriteCategory];
+                annotationView.image = tmpImage;
             } else {
                 annotationView.image = [UIImage imageNamed:@"pawprint"];
             }
@@ -376,7 +379,7 @@ const float kMaxEpsilon = 0.005;
 
 #pragma mark - CalloutAnnotationViewDelegate
 
-- (void) didToggleFavoriteButton:(CalloutAnnotationView *)annotationView {
+- (void) didPressFavoriteButton:(CalloutAnnotationView *)annotationView {
     
     //Update data model.
     [[DataSource sharedInstance] toggleFavoriteStatus:annotationView.searchAnnotation];
@@ -385,7 +388,13 @@ const float kMaxEpsilon = 0.005;
     if (annotationView.searchAnnotation.favoriteState == FavoriteStateFavorited) {
         
         //Update annotation marker and refresh callout view.
-        [self.mapView viewForAnnotation:annotationView.searchAnnotation].image = [UIImage imageNamed:@"pawprint-yellow"];
+        
+        UIImage *tmpImage = [[UIImage alloc] init];
+        
+        tmpImage = [annotationView.searchAnnotation setImageForFavoriteCategory:annotationView.searchAnnotation.favoriteCategory];
+        
+        [self.mapView viewForAnnotation:annotationView.searchAnnotation].image = tmpImage;
+        
         [self mapView:self.mapView didSelectAnnotationView:[annotationView.searchAnnotation annotationView]];
         
     } else if (annotationView.searchAnnotation.favoriteState == FavoriteStateNotFavorited) {
@@ -417,6 +426,75 @@ const float kMaxEpsilon = 0.005;
         }
     }
 }
+
+- (void) didPressPhoneButton:(CalloutAnnotationView *)annotationView {
+    NSString *phoneURL = @"tel:";
+    if (annotationView.searchAnnotation.phoneNumber != nil) {
+        NSString *annotationPhoneNumber = [phoneURL stringByAppendingString:annotationView.searchAnnotation.phoneNumber];
+         [[UIApplication sharedApplication] openURL:[NSURL URLWithString:annotationPhoneNumber]];
+    } else {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle: NSLocalizedString(@"Whoops!", @"Error")
+                                                        message: NSLocalizedString(@"These guys need a phone number!", @"No phone")
+                                                       delegate: nil
+                                              cancelButtonTitle: NSLocalizedString(@"OK", nil)
+                                              otherButtonTitles: nil];
+        
+        [alert show];
+    }
+}
+
+- (void) didPressWebButton:(CalloutAnnotationView *)annotationView {
+    if (annotationView.searchAnnotation.url != nil) {
+        [DataSource sharedInstance].selectedAnnotationURL = annotationView.searchAnnotation.url;
+        AnnotationWebViewController *webVC = [[AnnotationWebViewController alloc] init];
+        [self.navigationController pushViewController:webVC animated:YES];
+    } else {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle: NSLocalizedString(@"Whoops!", @"Error")
+                                                        message: NSLocalizedString(@"No website here! We're off the grid now, Charlie", @"No website")
+                                                       delegate: nil
+                                              cancelButtonTitle: NSLocalizedString(@"OK", nil)
+                                              otherButtonTitles: nil];
+        
+        [alert show];
+
+    }
+}
+
+- (void) didPressMapButton:(CalloutAnnotationView *)annotationView {
+    // Check for iOS 6
+    Class mapItemClass = [MKMapItem class];
+    if (mapItemClass && [mapItemClass respondsToSelector:@selector(openMapsWithItems:launchOptions:)])
+    {
+        // Create an MKMapItem to pass to the Maps app
+        CLLocationCoordinate2D coordinate = annotationView.searchAnnotation.coordinate;
+        MKPlacemark *placemark = [[MKPlacemark alloc] initWithCoordinate:coordinate
+                                                       addressDictionary:nil];
+        MKMapItem *mapItem = [[MKMapItem alloc] initWithPlacemark:placemark];
+        [mapItem setName:annotationView.searchAnnotation.title];
+        // Pass the map item to the Maps app
+        [mapItem openInMapsWithLaunchOptions:nil];
+    }
+    
+}
+
+- (void) categoryWasChanged:(NSInteger)category forCalloutView:(CalloutAnnotationView *)annotationView {
+    annotationView.searchAnnotation.favoriteCategory = category;
+    [[DataSource sharedInstance] setFavoriteCategory:annotationView.searchAnnotation toCategory:category];
+    [annotationView setImageForCategoryButton];
+    
+    UIImage *tmpImage = [[UIImage alloc] init];
+    
+    if(annotationView.searchAnnotation.favoriteState == FavoriteStateFavorited) {
+        tmpImage = [annotationView.searchAnnotation setImageForFavoriteCategory:annotationView.searchAnnotation.favoriteCategory];
+    
+    } else {
+        
+        tmpImage = [UIImage imageNamed:@"pawprint"];
+    }
+    
+    [self.mapView viewForAnnotation:annotationView.searchAnnotation].image = tmpImage;
+}
+
 
 #pragma mark - QuickSearchToolbarDelegate
 

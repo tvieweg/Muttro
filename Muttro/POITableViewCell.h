@@ -14,14 +14,27 @@
 
 - (void) cellDidPressLikeButton:(POITableViewCell *)cell;
 
+- (void) cellDidPressPhoneButton:(POITableViewCell *)cell;
+
+- (void) cellDidPressWebButton:(POITableViewCell *)cell;
+
+- (void) cellDidPressMapButton:(POITableViewCell *)cell;
+
 @end
 
 @interface POITableViewCell : UITableViewCell
 
 @property (nonatomic, strong) SearchAnnotation *searchAnnotation;
 @property (nonatomic, strong) FavoritesButton *favoriteButton;
+
 @property (nonatomic, strong) UILabel *poiName;
 @property (nonatomic, strong) UILabel *poiDescription;
+@property (nonatomic, strong) UILabel *distanceToPOI;
+
+@property (nonatomic, strong) UIButton *phoneButton;
+@property (nonatomic, strong) UIButton *webButton;
+@property (nonatomic, strong) UIButton *mapButton;
+@property (nonatomic, strong) UIImageView *categoryImage;
 
 @property (nonatomic, weak) id <POITableViewCellDelegate> delegate;
 
