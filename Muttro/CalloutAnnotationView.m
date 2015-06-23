@@ -148,28 +148,9 @@ const float kCAButtonSpacing = 6.0;
 
 - (void) setImageForCategoryButton {
     if(self.searchAnnotation.favoriteState == FavoriteStateFavorited) {
-        switch (self.searchAnnotation.favoriteCategory) {
-            case FavoriteCategoryNoCategory:
-                [self.categoryButton setImage:[UIImage imageNamed:@"pawprint-coral"] forState:UIControlStateNormal];
-                break;
-            case FavoriteCategoryPark:
-                [self.categoryButton setImage:[UIImage imageNamed:@"park"] forState:UIControlStateNormal];
-                break;
-            case FavoriteCategoryGroomers:
-                [self.categoryButton setImage:[UIImage imageNamed:@"grooming"] forState:UIControlStateNormal];
-                break;
-            case FavoriteCategoryPetStore:
-                [self.categoryButton setImage:[UIImage imageNamed:@"petstore"] forState:UIControlStateNormal];
-                break;
-            case FavoriteCategoryDayCare:
-                [self.categoryButton setImage:[UIImage imageNamed:@"daycare"] forState:UIControlStateNormal];
-                break;
-            case FavoriteCategoryVet:
-                [self.categoryButton setImage:[UIImage imageNamed:@"vet"] forState:UIControlStateNormal];
-                break;
-            default:
-                break;
-        }
+        UIImage *tmpImage = [[UIImage alloc] init];
+        tmpImage = [self.searchAnnotation setImageForFavoriteCategory:self.searchAnnotation.favoriteCategory];
+        [self.categoryButton setImage:tmpImage forState:UIControlStateNormal]; 
     } else {
         [self.categoryButton setImage:[UIImage imageNamed:@"pawprint"] forState:UIControlStateNormal];
     }

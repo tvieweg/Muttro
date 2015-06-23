@@ -120,28 +120,7 @@ const double kPTMetersToMilesConversion = 0.000621371;
 
 - (void) setImageForCellCategoryButton:(POITableViewCell *)cell {
     if(cell.searchAnnotation.favoriteState == FavoriteStateFavorited) {
-        switch (cell.searchAnnotation.favoriteCategory) {
-            case FavoriteCategoryNoCategory:
-                cell.categoryImage.image = [UIImage imageNamed:@"pawprint-coral"];
-                break;
-            case FavoriteCategoryPark:
-                cell.categoryImage.image = [UIImage imageNamed:@"park"];
-                break;
-            case FavoriteCategoryGroomers:
-                cell.categoryImage.image = [UIImage imageNamed:@"grooming"];
-                break;
-            case FavoriteCategoryPetStore:
-                cell.categoryImage.image = [UIImage imageNamed:@"petstore"];
-                break;
-            case FavoriteCategoryDayCare:
-                cell.categoryImage.image = [UIImage imageNamed:@"daycare"];
-                break;
-            case FavoriteCategoryVet:
-                cell.categoryImage.image = [UIImage imageNamed:@"vet"];
-                break;
-            default:
-                break;
-        }
+        cell.categoryImage.image = [cell.searchAnnotation setImageForFavoriteCategory:cell.searchAnnotation.favoriteCategory]; 
     } else {
         cell.categoryImage.image = [UIImage imageNamed:@"pawprint"];
     }

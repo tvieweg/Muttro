@@ -36,6 +36,8 @@ typedef NS_ENUM(NSInteger, FavoriteCategory) {
 -(id)initWithMapItem:(MKMapItem *)mapItem; 
 
 -(id)initWithTitle:(NSString *)newTitle Location:(CLLocationCoordinate2D)location;
-- (MKAnnotationView *)annotationView; 
+- (MKAnnotationView *)annotationView;
+
+- (UIImage *) setImageForFavoriteCategory:(NSInteger)favoriteCategory; 
 
 @end

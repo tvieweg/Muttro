@@ -44,28 +44,10 @@
     annotationView.enabled = YES;
     annotationView.canShowCallout = NO;
     if(self.favoriteState == FavoriteStateFavorited) {
-        switch (self.favoriteCategory) {
-            case FavoriteCategoryNoCategory:
-                annotationView.image = [UIImage imageNamed:@"pawprint-coral"];
-                break;
-            case FavoriteCategoryPark:
-                annotationView.image = [UIImage imageNamed:@"park"];
-                break;
-            case FavoriteCategoryGroomers:
-                annotationView.image = [UIImage imageNamed:@"grooming"];
-                break;
-            case FavoriteCategoryPetStore:
-                annotationView.image = [UIImage imageNamed:@"petstore"];
-                break;
-            case FavoriteCategoryDayCare:
-                annotationView.image = [UIImage imageNamed:@"daycare"];
-                break;
-            case FavoriteCategoryVet:
-                annotationView.image = [UIImage imageNamed:@"vet"];
-                break;
-            default:
-                break;
-        }
+        UIImage *tmpImage = [[UIImage alloc] init];
+        [self setImageForFavoriteCategory:self.favoriteCategory];
+        annotationView.image = tmpImage;
+        
     } else {
         annotationView.image = [UIImage imageNamed:@"pawprint"];
     }
@@ -73,6 +55,31 @@
     return annotationView; 
 }
 
+- (UIImage *) setImageForFavoriteCategory:(NSInteger)favoriteCategory {
+    switch (favoriteCategory) {
+        case FavoriteCategoryNoCategory:
+            return [UIImage imageNamed:@"pawprint-coral"];
+            break;
+        case FavoriteCategoryPark:
+            return [UIImage imageNamed:@"park"];
+            break;
+        case FavoriteCategoryGroomers:
+            return [UIImage imageNamed:@"grooming"];
+            break;
+        case FavoriteCategoryPetStore:
+            return [UIImage imageNamed:@"petstore"];
+            break;
+        case FavoriteCategoryDayCare:
+            return [UIImage imageNamed:@"daycare"];
+            break;
+        case FavoriteCategoryVet:
+            return [UIImage imageNamed:@"vet"];
+            break;
+        default:
+            return [UIImage imageNamed:@"pawprint"];
+            break;
+    }
+}
 
 #pragma mark - NSCoding
 
