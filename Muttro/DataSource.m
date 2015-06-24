@@ -6,20 +6,20 @@
 //  Copyright (c) 2015 Trevor Vieweg. All rights reserved.
 //
 
-
-
 #import "DataSource.h"
 
 const float kCoordinateEpsilon = 0.005;
+const float kDistanceThreshold = 200;
+const float kMaxTimeBetweenMapUpdates = 15.0;
 
-@interface DataSource () {
+@interface DataSource () <CLLocationManagerDelegate> {
     NSMutableArray *_favoriteLocations;
+    CLLocation *_currentLocation;
 }
 
 @property (nonatomic, strong) NSMutableArray *recentSearches;
 @property (nonatomic, strong) NSMutableArray *favoriteLocations;
 @property (nonatomic, strong) NSMutableArray *searchResultsAnnotations;
-
 
 @end
 
@@ -42,7 +42,7 @@ const float kCoordinateEpsilon = 0.005;
         //initialize arrays.
         self.recentSearches = [NSMutableArray new];
         self.favoriteLocations = [NSMutableArray new];
-        self.searchResultsAnnotations = [NSMutableArray new]; 
+        self.searchResultsAnnotations = [NSMutableArray new];
         
         //Make requests to get objects from KeyedArchiver
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -71,9 +71,82 @@ const float kCoordinateEpsilon = 0.005;
                 }
             });
         });
+        
+        [self startLocationManager];
 
     }
     return self;
+}
+
+#pragma mark - Location Manager
+
+- (void)startLocationManager {
+    
+    // Create the location manager if this object does not
+    // already have one.
+    if (self.locationManager == nil) {
+        self.locationManager = [[CLLocationManager alloc] init];
+        
+    }
+    [self.locationManager requestAlwaysAuthorization];
+    self.locationManager.delegate = self;
+    
+    // Set a movement threshold for new events.
+    self.locationManager.distanceFilter = kDistanceThreshold; // meters
+    
+    [self.locationManager startUpdatingLocation];
+    [self.locationManager startMonitoringSignificantLocationChanges]; 
+}
+
+- (void) locationManager:(CLLocationManager *)manager
+      didUpdateLocations:(NSArray *)locations {
+    
+    [self checkForNearbyPOIs];
+    
+    //TODO: If it's a relatively recent event, turn off updates to save power.
+    CLLocation* location = [locations lastObject];
+    NSDate* eventDate = location.timestamp;
+    NSTimeInterval howRecent = [eventDate timeIntervalSinceNow];
+    
+    if (fabs(howRecent) < kMaxTimeBetweenMapUpdates) {
+        // If the event is recent, do something with it.
+        self.userLocation = location;
+        if (self.shouldUpdateMapRegionToUserLocation) {
+            self.currentLocation = location;
+        }
+    }
+}
+
+- (void) checkForNearbyPOIs {
+    
+    if (self.favoriteLocations.count > 0) {
+        for (SearchAnnotation *favoritePOI in self.favoriteLocations) {
+            if (favoritePOI.distanceToUser > 1000) {
+                //notification hasn't already recently been sent for this POI.
+                
+                favoritePOI.distanceToUser = [self findDistanceFromUser:favoritePOI];
+                
+                if (favoritePOI.distanceToUser < 1000) {
+                    
+                    //user is within 1000 meters of location, send notification.
+                    UILocalNotification *localNotif = [[UILocalNotification alloc] init];
+                    
+                    localNotif.timeZone = [NSTimeZone defaultTimeZone];
+                    
+                    localNotif.alertBody = [NSString stringWithFormat:@"Near %@", favoritePOI.title];
+                    localNotif.alertAction = NSLocalizedString(@"View Details", nil);
+                    localNotif.alertTitle = [NSString stringWithFormat:@"Near %@", favoritePOI.title];
+                    
+                    localNotif.soundName = UILocalNotificationDefaultSoundName;
+                    
+                    [[UIApplication sharedApplication] presentLocalNotificationNow:localNotif];
+                    
+                }
+            } else {
+                favoritePOI.distanceToUser = [self findDistanceFromUser:favoritePOI];
+            }
+        }
+    }
 }
 
 - (void) updateRecentSearches:(NSString *)latestSearch {
@@ -111,6 +184,7 @@ const float kCoordinateEpsilon = 0.005;
 }
 
 -(void) searchWithParameters:(NSString *)parameters withCompletionBlock:(SearchCompletionBlock)completionHandler {
+    self.shouldUpdateMapRegionToUserLocation = NO; 
     MKLocalSearchRequest *searchRequest = [[MKLocalSearchRequest alloc] init];
     NSString *dog = @"dog ";
     NSString *parametersWithDogAppended = [dog stringByAppendingString:parameters];
@@ -185,11 +259,8 @@ const float kCoordinateEpsilon = 0.005;
     [self.searchResultsAnnotations removeAllObjects];
     for (MKMapItem *mapItem in mapItems) {
         SearchAnnotation *annotation = [[SearchAnnotation alloc] initWithMapItem:mapItem];
-        CLLocation *annotationLocation = [[CLLocation alloc] initWithLatitude:
-                                          annotation.coordinate.latitude
-                                                                    longitude:
-                                          annotation.coordinate.longitude];
-        annotation.distanceToUser = [_currentLocation distanceFromLocation:annotationLocation];
+        
+        annotation.distanceToUser = [self findDistanceFromUser:annotation];
         
         [self.searchResultsAnnotations addObject:annotation];
         
@@ -201,7 +272,7 @@ const float kCoordinateEpsilon = 0.005;
                                       annotation.coordinate.latitude
                                                                 longitude:
                                       annotation.coordinate.longitude];
-    return [_currentLocation distanceFromLocation:annotationLocation];
+    return [_userLocation distanceFromLocation:annotationLocation];
 }
 
 #pragma mark - Favorite toggling

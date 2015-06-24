@@ -18,52 +18,28 @@
 #import "QuickSearchToolbar.h"
 #import "AnnotationWebViewController.h"
 
-const float kDistanceThreshold = 200;
-const float kMaxTimeBetweenMapUpdates = 15.0;
 const float kMapSpan = 0.03;
 const float kMaxEpsilon = 0.005;
 
 @interface MapViewController () <MKMapViewDelegate, CLLocationManagerDelegate, UISearchBarDelegate, CalloutAnnotationViewDelegate, QuickSearchToolbarDelegate>
 
 @property (strong, nonatomic) MKMapView *mapView;
-@property (strong, nonatomic) CLLocationManager *locationManager;
 @property (strong, nonatomic) UISearchBar *searchBar;
 @property (weak, nonatomic) UIGestureRecognizer *hideKeyboardTapGestureRecognizer;
-@property (assign, nonatomic) BOOL shouldUpdateMapRegionToUserLocation;
 @property (strong, nonatomic) QuickSearchToolbar *quickSearchToolbar;
 
 @end
 
 @implementation MapViewController
 
-- (void)viewWillAppear:(BOOL)animated {
-    
-    [super viewWillAppear:YES];
-    if ([DataSource sharedInstance].locationWasTapped) {
-       
-        self.shouldUpdateMapRegionToUserLocation = NO;
-        [DataSource sharedInstance].locationWasTapped = NO;
-        [self setMapRegionToLocation: [DataSource sharedInstance].lastTappedCoordinate withSpanRange:kMapSpan];
-        
-    } else {
-        self.shouldUpdateMapRegionToUserLocation = YES;
-    }
-    
-    NSArray *selectedAnnotations = self.mapView.selectedAnnotations;
-    for(id annotation in selectedAnnotations) {
-        [self.mapView deselectAnnotation:annotation animated:NO];
-    }
-    
-    [self.mapView removeAnnotations:self.mapView.annotations];
-    [self addSearchAndFavoriteAnnotationsToMap]; 
-    
-}
-
 - (void)viewDidLoad {
     [super viewDidLoad];
     
     //KVO for favoriteLocations
     [[DataSource sharedInstance] addObserver:self forKeyPath:@"favoriteLocations" options:0 context:nil];
+    
+    [[DataSource sharedInstance] addObserver:self forKeyPath:@"currentLocation" options:0 context:nil];
+
     
     //init search bar
     self.searchBar = [[UISearchBar alloc] init];
@@ -89,9 +65,6 @@ const float kMaxEpsilon = 0.005;
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] init];
     self.hideKeyboardTapGestureRecognizer = tap;
     [self.hideKeyboardTapGestureRecognizer addTarget:self action:@selector(tapGestureDidFire:)];
-
-    
-    [self startLocationManager];
     
     //add Subviews
     [self.view addGestureRecognizer:tap];
@@ -101,6 +74,28 @@ const float kMaxEpsilon = 0.005;
     [self.view addSubview:self.mapView];
     [self.view addSubview:self.searchBar];
     [self.view addSubview:self.quickSearchToolbar];
+    
+}
+
+- (void) viewDidAppear:(BOOL)animated {
+    
+    NSArray *selectedAnnotations = self.mapView.selectedAnnotations;
+    for(id annotation in selectedAnnotations) {
+        [self.mapView deselectAnnotation:annotation animated:NO];
+    }
+    [self.mapView removeAnnotations:self.mapView.annotations];
+    [self addSearchAndFavoriteAnnotationsToMap];
+    
+    if ([DataSource sharedInstance].locationWasTapped) {
+        
+        [DataSource sharedInstance].shouldUpdateMapRegionToUserLocation = NO;
+        [DataSource sharedInstance].locationWasTapped = NO;
+        [self setMapRegionToLocation: [DataSource sharedInstance].lastTappedAnnotation.coordinate withSpanRange:kMapSpan];
+        [self.mapView selectAnnotation:[DataSource sharedInstance].lastTappedAnnotation animated:YES];
+        
+    } else {
+        [DataSource sharedInstance].shouldUpdateMapRegionToUserLocation = YES;
+    }
     
 }
 
@@ -169,45 +164,6 @@ const float kMaxEpsilon = 0.005;
     }
 }
 
-#pragma mark - Location Manager
-
-- (void)startLocationManager {
-    
-    // Create the location manager if this object does not
-    // already have one.
-    if (self.locationManager == nil) {
-        self.locationManager = [[CLLocationManager alloc] init];
-        
-    }
-    [self.locationManager requestWhenInUseAuthorization];
-    self.locationManager.delegate = self;
-    
-    // Set a movement threshold for new events.
-    self.locationManager.distanceFilter = kDistanceThreshold; // meters
-    
-    [self.locationManager startUpdatingLocation];
-}
-
-- (void) locationManager:(CLLocationManager *)manager
-     didUpdateLocations:(NSArray *)locations {
-
-    //TODO: If it's a relatively recent event, turn off updates to save power.
-    CLLocation* location = [locations lastObject];
-    NSDate* eventDate = location.timestamp;
-    NSTimeInterval howRecent = [eventDate timeIntervalSinceNow];
-    if (fabs(howRecent) < kMaxTimeBetweenMapUpdates) {
-        // If the event is recent, do something with it.
-        
-        if (self.shouldUpdateMapRegionToUserLocation) {
-            //We aren't looking at a location tapped from the list view.
-            CLLocationCoordinate2D mapCenter = CLLocationCoordinate2DMake(location.coordinate.latitude, location.coordinate.longitude);
-            [self setMapRegionToLocation:mapCenter withSpanRange:kMapSpan];
-            [DataSource sharedInstance].currentLocation = location; 
-        }
-    }
-    
-}
-
 #pragma mark - Layouts
 
 - (void)viewWillLayoutSubviews {
@@ -270,6 +226,7 @@ const float kMaxEpsilon = 0.005;
 - (void)mapView:(MKMapView *)mapView didSelectAnnotationView:(MKAnnotationView *)view {
 
     if([view.annotation isKindOfClass:[SearchAnnotation class]]) {
+        [DataSource sharedInstance].shouldUpdateMapRegionToUserLocation = NO;
         CalloutAnnotation *calloutAnnotation = [[CalloutAnnotation alloc] initForAnnotation: (SearchAnnotation *) view.annotation];
         [self.mapView addAnnotation:calloutAnnotation];
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -314,12 +271,10 @@ const float kMaxEpsilon = 0.005;
 #pragma mark - Bar Buttons
     
 - (void)locationTapped:(UIBarButtonItem *)sender {
-    self.shouldUpdateMapRegionToUserLocation = YES;
+    [DataSource sharedInstance].shouldUpdateMapRegionToUserLocation = YES;
     [self setMapRegionToLocation:self.mapView.userLocation.coordinate withSpanRange:kMapSpan];
 }
-- (void) filterTapped:(UIBarButtonItem *)sender {
-    NSLog(@"Filter tapped!");
-}
+
 
 - (void) listTapped:(UIBarButtonItem *)sender {
     ListTableViewController *listVC = [[ListTableViewController alloc] init];
@@ -370,11 +325,17 @@ const float kMaxEpsilon = 0.005;
         if (kindOfChange == NSKeyValueChangeSetting) {
             [self reloadAnnotations];
         }
+    } else if (object == [DataSource sharedInstance] && [keyPath isEqualToString:@"currentLocation"]) {
+        CLLocation *location = [DataSource sharedInstance].currentLocation; 
+        CLLocationCoordinate2D mapCenter = CLLocationCoordinate2DMake(location.coordinate.latitude, location.coordinate.longitude);
+        [self setMapRegionToLocation:mapCenter withSpanRange:kMapSpan];
     }
 }
 
 - (void) dealloc {
     [[DataSource sharedInstance] removeObserver:self forKeyPath:@"favoriteLocations"];
+    [[DataSource sharedInstance] removeObserver:self forKeyPath:@"currentLocation"];
+
 }
 
 #pragma mark - CalloutAnnotationViewDelegate

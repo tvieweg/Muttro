@@ -8,9 +8,9 @@
 
 #import "AppDelegate.h"
 #import "MapViewController.h"
+#import "DataSource.h"
 
 @interface AppDelegate ()
-
 
 @end
 
@@ -19,7 +19,7 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
-    
+    [DataSource sharedInstance]; 
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     self.window.backgroundColor = [UIColor whiteColor];
     UINavigationController *navVC = [[UINavigationController alloc] init];
@@ -29,7 +29,14 @@
     self.window.rootViewController = navVC;
     
     [self.window makeKeyAndVisible];
-
+    
+    UIUserNotificationType types =
+    UIUserNotificationTypeSound | UIUserNotificationTypeAlert;
+    
+    UIUserNotificationSettings *mySettings = [UIUserNotificationSettings settingsForTypes:types categories:nil];
+    
+    [[UIApplication sharedApplication] registerUserNotificationSettings:mySettings];
+    
     return YES;
 }
 
@@ -49,6 +56,7 @@
 
 - (void)applicationDidBecomeActive:(UIApplication *)application {
     // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application {

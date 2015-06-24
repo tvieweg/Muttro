@@ -92,12 +92,10 @@ const float kQuickButtonHeight = 40.0;
 }
 
 - (void) dayCareButtonFired:(UIButton *)sender {
-    NSLog(@"dayCare Fired!");
     [self.delegate didPressDayCareButton:self];
 }
 
 - (void) petStoreButtonFired:(UIButton *)sender {
-    NSLog(@"petStore Fired!");
     [self.delegate didPressPetStoreButton:self];
 }
 

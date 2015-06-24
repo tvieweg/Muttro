@@ -20,13 +20,18 @@ typedef void (^SearchCompletionBlock)(NSError *error);
 @property (nonatomic, strong, readonly) NSMutableArray *recentSearches;
 @property (nonatomic, strong, readonly) NSMutableArray *searchResultsAnnotations;
 
-@property (nonatomic, assign) CLLocationCoordinate2D lastTappedCoordinate;
+@property (strong, nonatomic) CLLocationManager *locationManager;
+@property (assign, nonatomic) BOOL shouldUpdateMapRegionToUserLocation;
+
+
+@property (nonatomic, assign) SearchAnnotation *lastTappedAnnotation;
 @property (nonatomic, assign) BOOL locationWasTapped;
 @property (nonatomic, strong, readonly) NSMutableArray *favoriteLocations;
 
 @property (nonatomic, strong) NSURL *selectedAnnotationURL; 
 
 @property (nonatomic, strong) CLLocation *currentLocation;
+@property (nonatomic, strong) CLLocation *userLocation; 
 
 - (void) deleteFavoriteItem:(SearchAnnotation *)item;
 
