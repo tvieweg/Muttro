@@ -32,7 +32,6 @@ const double kPTMetersToMilesConversion = 0.000621371;
     self.navigationItem.hidesBackButton = YES;
     self.navigationItem.title = @"Muttro";
     self.navigationItem.leftBarButtonItem = mapButton;
-
 }
 
 #pragma mark - Table view data source
@@ -144,16 +143,10 @@ const double kPTMetersToMilesConversion = 0.000621371;
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 
-    if (indexPath.section == 0) {
-        SearchAnnotation *tappedAnnotation = [DataSource sharedInstance].favoriteLocations[indexPath.row];
-        [DataSource sharedInstance].lastTappedCoordinate = tappedAnnotation.coordinate;
-        [DataSource sharedInstance].locationWasTapped = YES;
-        
-    } else {
-        MKMapItem *tappedMapItem = [DataSource sharedInstance].searchResults.mapItems[indexPath.row];
-        [DataSource sharedInstance].lastTappedCoordinate = tappedMapItem.placemark.coordinate;
-        [DataSource sharedInstance].locationWasTapped = YES;
-    }
+    SearchAnnotation *tappedAnnotation = [DataSource sharedInstance].favoriteLocations[indexPath.row];
+    [DataSource sharedInstance].lastTappedAnnotation = tappedAnnotation;
+    [DataSource sharedInstance].locationWasTapped = YES;
+    
 
     CATransition *transition = [CATransition animation];
     transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionDefault];

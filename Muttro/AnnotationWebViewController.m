@@ -71,7 +71,6 @@ const float kAWbuttonHeight = 40;
     self.activityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:self.activityIndicator];
     self.navigationItem.title = @"Muttro";
-    self.navigationItem.backBarButtonItem.title = @"Map"; 
     
     if (self.url) {
         NSURLRequest *request = [NSURLRequest requestWithURL:self.url];
