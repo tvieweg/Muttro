@@ -68,9 +68,18 @@ const float kMaxEpsilon = 0.005;
     
     //add Subviews
     [self.view addGestureRecognizer:tap];
-    self.navigationItem.rightBarButtonItem = locationButton; 
+    self.navigationItem.rightBarButtonItem = locationButton;
     self.navigationItem.leftBarButtonItem = listButton;
-    self.navigationItem.title = @"Muttro"; 
+    
+    //Custom coloring
+    UIColor *primaryColor = [UIColor colorWithRed:6/255.0 green:142/255.0 blue:192/255.0 alpha:1.0];
+    UIColor *textColor = [UIColor colorWithRed:235/255.0 green:240/255.0 blue:240/255.0 alpha:1.0];
+
+    self.navigationController.navigationBar.barTintColor = primaryColor;
+    self.navigationController.navigationBar.tintColor = textColor;
+    self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName : textColor};
+    
+    self.navigationItem.title = @"Muttro";
     [self.view addSubview:self.mapView];
     [self.view addSubview:self.searchBar];
     [self.view addSubview:self.quickSearchToolbar];
@@ -168,9 +177,10 @@ const float kMaxEpsilon = 0.005;
 
 - (void)viewWillLayoutSubviews {
     CGFloat navBarHeight = CGRectGetMaxY(self.navigationController.navigationBar.frame);
-    self.mapView.frame = CGRectMake(0, navBarHeight, self.view.frame.size.width, self.view.frame.size.height - navBarHeight);
+    CGFloat quickSearchToolbarHeight = 65;
+    self.mapView.frame = CGRectMake(0, CGRectGetMaxY(self.searchBar.frame), self.view.frame.size.width, self.view.frame.size.height - navBarHeight - quickSearchToolbarHeight);
     self.searchBar.frame = CGRectMake(0, navBarHeight, self.view.bounds.size.width, 40);
-    self.quickSearchToolbar.frame = CGRectMake(0, CGRectGetMaxY(self.searchBar.frame), self.view.bounds.size.width, 60);
+    self.quickSearchToolbar.frame = CGRectMake(0, self.view.bounds.size.height - quickSearchToolbarHeight, self.view.bounds.size.width, quickSearchToolbarHeight);
 
 }
 

@@ -68,9 +68,10 @@ const float kQuickButtonHeight = 40.0;
         [self.petStoreButton addTarget:self action:@selector(petStoreButtonFired:) forControlEvents:UIControlEventTouchUpInside];
         [self.buttons addObject:self.petStoreButton];
 
+        UIColor *buttonTextColor = [UIColor colorWithRed:6/255.0 green:142/255.0 blue:192/255.0 alpha:1.0];
         for (UIButton *button in self.buttons) {
             button.titleLabel.font = [UIFont systemFontOfSize:10];
-            [button setTitleColor:[UIColor blueColor] forState:UIControlStateNormal];
+            [button setTitleColor:buttonTextColor forState:UIControlStateNormal];
             [self addSubview:button];
         }
         
@@ -104,9 +105,10 @@ const float kQuickButtonHeight = 40.0;
     // the space between the image and text
     CGFloat spacing = 6.0;
     CGFloat buttonOriginX = 0;
+    CGFloat buttonOriginY = 5;
     
     for (UIButton *button in self.buttons) {
-        button.frame = CGRectMake(buttonOriginX, 0, buttonSpacing, kQuickButtonHeight);
+        button.frame = CGRectMake(buttonOriginX, buttonOriginY, buttonSpacing, kQuickButtonHeight);
         
         // lower the text and push it left so it appears centered
         //  below the image
@@ -117,7 +119,7 @@ const float kQuickButtonHeight = 40.0;
         
         // raise the image and push it right so it appears centered
         //  above the text
-        button.imageEdgeInsets = UIEdgeInsetsMake(0, 0.0, 0.0, - titleSize.width);
+        button.imageEdgeInsets = UIEdgeInsetsMake(0.0, 0.0, 0.0, - titleSize.width);
         
         buttonOriginX += buttonSpacing; 
     }
