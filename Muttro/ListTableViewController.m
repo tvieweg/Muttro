@@ -32,6 +32,7 @@ const double kPTMetersToMilesConversion = 0.000621371;
     self.navigationItem.hidesBackButton = YES;
     self.navigationItem.title = @"Muttro";
     self.navigationItem.leftBarButtonItem = mapButton;
+
 }
 
 #pragma mark - Table view data source
@@ -61,6 +62,23 @@ const double kPTMetersToMilesConversion = 0.000621371;
         return @"Search Results";
 }
 
+/*- (void) tableView:(UITableView *)tableView willDisplayHeaderView:(UIView *)view forSection:(NSInteger)section {
+    UIColor *primaryColor = [UIColor colorWithRed:42/255.0 green:72/255.0 blue:136/255.0 alpha:1.0];
+    UIColor *secondaryColor = [UIColor colorWithRed:82/255.0 green:172/255.0 blue:180/255.0 alpha:1.0];
+    UIColor *textColor = [UIColor colorWithRed:235/255.0 green:240/255.0 blue:240/255.0 alpha:1.0];
+    
+    UITableViewHeaderFooterView *header = (UITableViewHeaderFooterView *)view;
+    [header.textLabel setTextColor:textColor];
+    
+    if (section == 0) {
+        view.tintColor = primaryColor;
+        
+    } else {
+        view.tintColor = secondaryColor;
+
+    }
+
+}*/
 
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -184,7 +202,6 @@ const double kPTMetersToMilesConversion = 0.000621371;
 #pragma mark - POITableViewCellDelegate
 
 - (void) cellDidPressLikeButton:(POITableViewCell *)cell {
-    NSLog(@"Favorite button pressed");
     
     [[DataSource sharedInstance] toggleFavoriteStatus:cell.searchAnnotation];
     [cell.favoriteButton setFavoriteButtonState:cell.searchAnnotation.favoriteState];
