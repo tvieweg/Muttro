@@ -198,9 +198,7 @@ const float kMaxTimeBetweenMapUpdates = 15.0;
             return;
         }
         
-        //Hide network activity
-        [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
-        //Set map region
+                //Set map region
         double tmpLatitude = [jsonResponse[@"region"][@"center"][@"latitude"] floatValue];
         double tmpLongitude = [jsonResponse[@"region"][@"center"][@"longitude"] floatValue];
         double tmpLatitudeDelta =[jsonResponse[@"region"][@"span"][@"latitude_delta"] floatValue];
@@ -218,6 +216,9 @@ const float kMaxTimeBetweenMapUpdates = 15.0;
     }];
     
     dispatch_group_wait(requestGroup, DISPATCH_TIME_FOREVER); // This avoids the program exiting before all our asynchronous callbacks have been made.
+    
+    //Hide network activity
+    [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
     
     [self createAnnotationsForYelpItems:self.yelpSearchResults];
 
