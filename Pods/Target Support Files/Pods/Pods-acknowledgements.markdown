@@ -1,9 +1,15 @@
 # Acknowledgements
 This application makes use of the following third party libraries:
 
-## AFNetworking
+## OAuthConsumer
 
-Copyright (c) 2011–2015 Alamofire Software Foundation (http://alamofire.org/)
+The MIT License (MIT)
+
+Portions copyright (c) 2003 Toxic Software
+Portions copyright (c) 2007 Kaboomerang LLC
+Portions copyright (c) 2008 Alberto García Hierro
+Portions copyright (c) 2008 Jonathan Wight
+Portions copyright (c) 2011 Tumblr
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

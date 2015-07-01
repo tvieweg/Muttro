@@ -136,11 +136,7 @@ const double kPTMetersToMilesConversion = 0.000621371;
 }
 
 - (void) setImageForCellCategoryButton:(POITableViewCell *)cell {
-    if(cell.searchAnnotation.favoriteState == FavoriteStateFavorited) {
-        cell.categoryImage.image = [cell.searchAnnotation setImageForFavoriteCategory:cell.searchAnnotation.favoriteCategory]; 
-    } else {
-        cell.categoryImage.image = [UIImage imageNamed:@"pawprint"];
-    }
+    cell.categoryImage.image = [cell.searchAnnotation setImageForCategory:cell.searchAnnotation.category];
 }
 
 
@@ -160,23 +156,41 @@ const double kPTMetersToMilesConversion = 0.000621371;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-
-    SearchAnnotation *tappedAnnotation = [DataSource sharedInstance].favoriteLocations[indexPath.row];
-    [DataSource sharedInstance].lastTappedAnnotation = tappedAnnotation;
-    [DataSource sharedInstance].locationWasTapped = YES;
     
+    if (indexPath.section == 0) {
 
-    CATransition *transition = [CATransition animation];
-    transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionDefault];
-    transition.duration = 0.45;
-    [transition setType:kCATransitionPush];
-    transition.subtype = kCATransitionFromRight;
-    transition.delegate = self;
-    [self.navigationController.view.layer addAnimation:transition forKey:nil];
-    
-    self.navigationController.navigationBarHidden = NO;
-    [self.navigationController popToRootViewControllerAnimated:NO];
+        SearchAnnotation *tappedAnnotation = [DataSource sharedInstance].favoriteLocations[indexPath.row];
+        [DataSource sharedInstance].lastTappedAnnotation = tappedAnnotation;
+        [DataSource sharedInstance].locationWasTapped = YES;
+        
 
+        CATransition *transition = [CATransition animation];
+        transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionDefault];
+        transition.duration = 0.45;
+        [transition setType:kCATransitionPush];
+        transition.subtype = kCATransitionFromRight;
+        transition.delegate = self;
+        [self.navigationController.view.layer addAnimation:transition forKey:nil];
+        
+        self.navigationController.navigationBarHidden = NO;
+        [self.navigationController popToRootViewControllerAnimated:NO];
+    } else {
+        SearchAnnotation *tappedAnnotation = [DataSource sharedInstance].searchResultsAnnotations[indexPath.row];
+        [DataSource sharedInstance].lastTappedAnnotation = tappedAnnotation;
+        [DataSource sharedInstance].locationWasTapped = YES;
+        
+        
+        CATransition *transition = [CATransition animation];
+        transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionDefault];
+        transition.duration = 0.45;
+        [transition setType:kCATransitionPush];
+        transition.subtype = kCATransitionFromRight;
+        transition.delegate = self;
+        [self.navigationController.view.layer addAnimation:transition forKey:nil];
+        
+        self.navigationController.navigationBarHidden = NO;
+        [self.navigationController popToRootViewControllerAnimated:NO];
+    }
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {

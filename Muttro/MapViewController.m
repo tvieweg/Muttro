@@ -55,6 +55,7 @@ const float kMaxEpsilon = 0.005;
     self.mapView = [[MKMapView alloc] init];
     self.mapView.showsUserLocation = YES;
     self.mapView.delegate = self;
+    self.mapView.rotateEnabled = NO; 
     
     //init Bar Buttons
     UIBarButtonItem *locationButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"location"] style:UIBarButtonItemStylePlain target:self action:@selector(locationTapped:)];
@@ -93,7 +94,6 @@ const float kMaxEpsilon = 0.005;
         [self.mapView deselectAnnotation:annotation animated:NO];
     }
     [self.mapView removeAnnotations:self.mapView.annotations];
-    [self addSearchAndFavoriteAnnotationsToMap];
     
     if ([DataSource sharedInstance].locationWasTapped) {
         
@@ -105,13 +105,14 @@ const float kMaxEpsilon = 0.005;
     } else {
         [DataSource sharedInstance].shouldUpdateMapRegionToUserLocation = YES;
     }
-    
+    [self addSearchAndFavoriteAnnotationsToMap];
 }
 
 #pragma mark - Search
 
--(void)searchUsingSearchQuery:(NSString *)searchText {
-    [[DataSource sharedInstance] searchWithParameters:searchText withCompletionBlock:^(NSError *error) {
+-(void)searchUsingSearchQuery:(NSString *)searchText andCategory:(NSString *)category {
+    
+    [[DataSource sharedInstance] searchYelpWithParameters:searchText category:category inLocation:[[CLLocation alloc] initWithLatitude:self.mapView.centerCoordinate.latitude longitude:self.mapView.centerCoordinate.longitude] withCompletionBlock:^(NSError *error) {
         
         NSArray *selectedAnnotations = self.mapView.selectedAnnotations;
         for(id annotation in selectedAnnotations) {
@@ -119,9 +120,12 @@ const float kMaxEpsilon = 0.005;
         }
 
         [self.mapView removeAnnotations:self.mapView.annotations];
-        [self.mapView setRegion:[DataSource sharedInstance].searchResults.boundingRegion];
+        
+        [self.mapView setRegion:[DataSource sharedInstance].yelpSearchResultsRegion];
         [self addSearchAndFavoriteAnnotationsToMap];
-
+        
+        //ADD A LABEL HIGHLIGHTING RESULTS
+        
     }];
     
 }
@@ -136,8 +140,13 @@ const float kMaxEpsilon = 0.005;
 #pragma mark - Search Bar Delegate
 
 - (void)searchBarSearchButtonClicked:(UISearchBar *)searchBar {
+    /*NSMutableString *dogSearchText = [self.searchBar.text mutableCopy];
+    
+    if (![dogSearchText containsString:@"dog"]) {
+        [dogSearchText insertString:@"dog " atIndex:0];
+    }*/
 
-    [self searchUsingSearchQuery:self.searchBar.text];
+    [self searchUsingSearchQuery:self.searchBar.text andCategory:@"All"];
     [self.searchBar resignFirstResponder];
     
 }
@@ -200,14 +209,9 @@ const float kMaxEpsilon = 0.005;
             
             //Set image when annotation is being reused. 
             SearchAnnotation *tmpAnnotation = (SearchAnnotation *)annotation;
-            if(tmpAnnotation.favoriteState == FavoriteStateFavorited) {
-                UIImage *tmpImage = [[UIImage alloc] init]; 
-                tmpImage = [tmpAnnotation setImageForFavoriteCategory:tmpAnnotation.favoriteCategory];
-                annotationView.image = tmpImage;
-            } else {
-                annotationView.image = [UIImage imageNamed:@"pawprint"];
-            }
-
+            UIImage *tmpImage = [[UIImage alloc] init];
+            tmpImage = [tmpAnnotation setImageForCategory:tmpAnnotation.category];
+            annotationView.image = tmpImage;
         }
         
         return annotationView;
@@ -321,7 +325,6 @@ const float kMaxEpsilon = 0.005;
 
 - (void) reloadAnnotations {
     [self.mapView removeAnnotations:self.mapView.annotations];
-    [self.mapView addAnnotations:[DataSource sharedInstance].favoriteLocations];
     [self addSearchAndFavoriteAnnotationsToMap];
 }
 
@@ -362,7 +365,7 @@ const float kMaxEpsilon = 0.005;
         
         UIImage *tmpImage = [[UIImage alloc] init];
         
-        tmpImage = [annotationView.searchAnnotation setImageForFavoriteCategory:annotationView.searchAnnotation.favoriteCategory];
+        tmpImage = [annotationView.searchAnnotation setImageForCategory:annotationView.searchAnnotation.category];
         
         [self.mapView viewForAnnotation:annotationView.searchAnnotation].image = tmpImage;
         
@@ -374,10 +377,10 @@ const float kMaxEpsilon = 0.005;
         BOOL keepAnnotation = NO;
         
         //Look for annotation in search results. If it's there, update keepAnnotation
-        for (MKMapItem *searchItem in [[DataSource sharedInstance].searchResults mapItems]) {
+        for (NSDictionary *searchItem in [DataSource sharedInstance].yelpSearchResults) {
             
-            float searchLat = searchItem.placemark.coordinate.latitude;
-            float searchLong = searchItem.placemark.coordinate.longitude;
+            float searchLat = [searchItem[@"location"][@"coordinate"][@"latitude"] floatValue];
+            float searchLong = [searchItem[@"location"][@"coordinate"][@"longitude"] floatValue];
             
             float favoriteLat = annotationView.searchAnnotation.coordinate.latitude;
             float favoriteLong = annotationView.searchAnnotation.coordinate.longitude;
@@ -389,7 +392,7 @@ const float kMaxEpsilon = 0.005;
         
         //If the annotation should stay, update the annotation marker and refresh the callout view. If not, remove the search and callout annotations. 
         if (keepAnnotation) {
-            [self.mapView viewForAnnotation:annotationView.searchAnnotation].image = [UIImage imageNamed:@"pawprint"];
+            //[self.mapView viewForAnnotation:annotationView.searchAnnotation].image = [UIImage imageNamed:@"pawprint"];
             [self mapView:self.mapView didSelectAnnotationView:[annotationView.searchAnnotation annotationView]];
         } else {
             [self.mapView removeAnnotation:annotationView.searchAnnotation];
@@ -449,19 +452,12 @@ const float kMaxEpsilon = 0.005;
 }
 
 - (void) categoryWasChanged:(NSInteger)category forCalloutView:(CalloutAnnotationView *)annotationView {
-    annotationView.searchAnnotation.favoriteCategory = category;
+    annotationView.searchAnnotation.category = category;
     [[DataSource sharedInstance] setFavoriteCategory:annotationView.searchAnnotation toCategory:category];
     [annotationView setImageForCategoryButton];
     
     UIImage *tmpImage = [[UIImage alloc] init];
-    
-    if(annotationView.searchAnnotation.favoriteState == FavoriteStateFavorited) {
-        tmpImage = [annotationView.searchAnnotation setImageForFavoriteCategory:annotationView.searchAnnotation.favoriteCategory];
-    
-    } else {
-        
-        tmpImage = [UIImage imageNamed:@"pawprint"];
-    }
+    tmpImage = [annotationView.searchAnnotation setImageForCategory:annotationView.searchAnnotation.category];
     
     [self.mapView viewForAnnotation:annotationView.searchAnnotation].image = tmpImage;
 }
@@ -470,23 +466,23 @@ const float kMaxEpsilon = 0.005;
 #pragma mark - QuickSearchToolbarDelegate
 
 - (void) didPressParkButton:(QuickSearchToolbar *)sender {
-    [self searchUsingSearchQuery:@"park"];
+    [self searchUsingSearchQuery:@"" andCategory:@"dog_parks"];
 }
 
 - (void) didPressVetButton:(QuickSearchToolbar *)sender {
-    [self searchUsingSearchQuery:@"boarding"];
+    [self searchUsingSearchQuery:@"dog" andCategory:@"vet"];
 }
 
 - (void) didPressGroomerButton:(QuickSearchToolbar *)sender {
-    [self searchUsingSearchQuery:@"grooming"];
+    [self searchUsingSearchQuery:@"dog" andCategory:@"groomer"];
 }
 
 - (void) didPressDayCareButton:(QuickSearchToolbar *)sender {
-    [self searchUsingSearchQuery:@"sitting"];
+    [self searchUsingSearchQuery:@"dog" andCategory:@"pet_sitting,dogwalkers"];
 }
 
 - (void) didPressPetStoreButton:(QuickSearchToolbar *)sender {
-    [self searchUsingSearchQuery:@"pet supplies"];
+    [self searchUsingSearchQuery:@"dog" andCategory:@"petstore"];
 }
 
 @end

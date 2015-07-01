@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		712F059E88698CED9B196AEE /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 13AD414CB3B117EA43AB66E8 /* libPods.a */; };
+		B102E3791B425F3400DA11F0 /* NSURLRequest+OAuth.m in Sources */ = {isa = PBXBuildFile; fileRef = B102E3761B425F3400DA11F0 /* NSURLRequest+OAuth.m */; };
+		B102E37A1B425F3400DA11F0 /* YPAPISearch.m in Sources */ = {isa = PBXBuildFile; fileRef = B102E3781B425F3400DA11F0 /* YPAPISearch.m */; };
 		B11D16071B38C48800F03F53 /* CategoryToolbar.m in Sources */ = {isa = PBXBuildFile; fileRef = B11D16061B38C48800F03F53 /* CategoryToolbar.m */; };
 		B1250A871B2CD1B700AAB9FC /* POITableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = B1250A861B2CD1B700AAB9FC /* POITableViewCell.m */; };
 		B142C7F41B33BECE002E01B4 /* AnnotationWebViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B142C7F31B33BECE002E01B4 /* AnnotationWebViewController.m */; };
@@ -42,6 +44,10 @@
 		0324D37D15087BECCC9D6AA5 /* Pods.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.debug.xcconfig; path = "Pods/Target Support Files/Pods/Pods.debug.xcconfig"; sourceTree = "<group>"; };
 		13AD414CB3B117EA43AB66E8 /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		A5FC62240C85BC10A8DB7558 /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
+		B102E3751B425F3400DA11F0 /* NSURLRequest+OAuth.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSURLRequest+OAuth.h"; sourceTree = "<group>"; };
+		B102E3761B425F3400DA11F0 /* NSURLRequest+OAuth.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSURLRequest+OAuth.m"; sourceTree = "<group>"; };
+		B102E3771B425F3400DA11F0 /* YPAPISearch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YPAPISearch.h; sourceTree = "<group>"; };
+		B102E3781B425F3400DA11F0 /* YPAPISearch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YPAPISearch.m; sourceTree = "<group>"; };
 		B11D16051B38C48800F03F53 /* CategoryToolbar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CategoryToolbar.h; sourceTree = "<group>"; };
 		B11D16061B38C48800F03F53 /* CategoryToolbar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CategoryToolbar.m; sourceTree = "<group>"; };
 		B1250A851B2CD1B700AAB9FC /* POITableViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = POITableViewCell.h; sourceTree = "<group>"; };
@@ -141,6 +147,10 @@
 		B156A39C1B2555DB000529AD /* Muttro */ = {
 			isa = PBXGroup;
 			children = (
+				B102E3751B425F3400DA11F0 /* NSURLRequest+OAuth.h */,
+				B102E3761B425F3400DA11F0 /* NSURLRequest+OAuth.m */,
+				B102E3771B425F3400DA11F0 /* YPAPISearch.h */,
+				B102E3781B425F3400DA11F0 /* YPAPISearch.m */,
 				B19155121B263AE60089B717 /* DataSource.h */,
 				B19155131B263AE60089B717 /* DataSource.m */,
 				B1B3D2C91B28991600E2A567 /* SearchAnnotation.h */,
@@ -344,10 +354,12 @@
 				B156A3A61B2555DB000529AD /* MapViewController.m in Sources */,
 				B142C7F41B33BECE002E01B4 /* AnnotationWebViewController.m in Sources */,
 				B162E1BE1B2B853D00918DF9 /* CalloutAnnotationView.m in Sources */,
+				B102E3791B425F3400DA11F0 /* NSURLRequest+OAuth.m in Sources */,
 				B162E1BB1B2AAB5900918DF9 /* FavoritesButton.m in Sources */,
 				B11D16071B38C48800F03F53 /* CategoryToolbar.m in Sources */,
 				B156A3A31B2555DB000529AD /* AppDelegate.m in Sources */,
 				B19155141B263AE60089B717 /* DataSource.m in Sources */,
+				B102E37A1B425F3400DA11F0 /* YPAPISearch.m in Sources */,
 				B1AA4E9D1B320CB90050E57C /* QuickSearchToolbar.m in Sources */,
 				B156A3A01B2555DB000529AD /* main.m in Sources */,
 				B16C9D461B2790A400BA1B97 /* ListTableViewController.m in Sources */,

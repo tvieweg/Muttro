@@ -147,13 +147,9 @@ const float kCAButtonSpacing = 6.0;
 }
 
 - (void) setImageForCategoryButton {
-    if(self.searchAnnotation.favoriteState == FavoriteStateFavorited) {
         UIImage *tmpImage = [[UIImage alloc] init];
-        tmpImage = [self.searchAnnotation setImageForFavoriteCategory:self.searchAnnotation.favoriteCategory];
+        tmpImage = [self.searchAnnotation setImageForCategory:self.searchAnnotation.category];
         [self.categoryButton setImage:tmpImage forState:UIControlStateNormal]; 
-    } else {
-        [self.categoryButton setImage:[UIImage imageNamed:@"pawprint"] forState:UIControlStateNormal];
-    }
 }
 
 - (void) favoritePressed:(FavoritesButton *)sender {
@@ -197,27 +193,27 @@ const float kCAButtonSpacing = 6.0;
 #pragma mark - CategoryToolbarDelegate
 
 - (void) categoryParkButtonPressed:(CategoryToolbar *)toolbar {
-    [self.delegate categoryWasChanged:FavoriteCategoryPark forCalloutView:self];
+    [self.delegate categoryWasChanged:CategoryPark forCalloutView:self];
     [self.categoryBar removeFromSuperview];
 }
 
 - (void) categoryGroomingButtonPressed:(CategoryToolbar *)toolbar {
-    [self.delegate categoryWasChanged:FavoriteCategoryGroomers forCalloutView:self];
+    [self.delegate categoryWasChanged:CategoryGroomers forCalloutView:self];
     [self.categoryBar removeFromSuperview];
 }
 
 - (void) categoryVetButtonPressed:(CategoryToolbar *)toolbar {
-    [self.delegate categoryWasChanged:FavoriteCategoryVet forCalloutView:self];
+    [self.delegate categoryWasChanged:CategoryVet forCalloutView:self];
     [self.categoryBar removeFromSuperview];
 }
 
 - (void) categoryDayCareButtonPressed:(CategoryToolbar *)toolbar {
-    [self.delegate categoryWasChanged:FavoriteCategoryDayCare forCalloutView:self];
+    [self.delegate categoryWasChanged:CategoryDayCare forCalloutView:self];
     [self.categoryBar removeFromSuperview];
 }
 
 - (void) categoryPetStoreButtonPressed:(CategoryToolbar *)toolbar {
-    [self.delegate categoryWasChanged:FavoriteCategoryPetStore forCalloutView:self];
+    [self.delegate categoryWasChanged:CategoryPetStore forCalloutView:self];
     [self.categoryBar removeFromSuperview];
 }
 

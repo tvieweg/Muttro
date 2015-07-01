@@ -14,7 +14,13 @@
 		</dict>
 		<dict>
 			<key>FooterText</key>
-			<string>Copyright (c) 2011&#8211;2015 Alamofire Software Foundation (http://alamofire.org/)
+			<string>The MIT License (MIT)
+
+Portions copyright (c) 2003 Toxic Software
+Portions copyright (c) 2007 Kaboomerang LLC
+Portions copyright (c) 2008 Alberto Garc&#237;a Hierro
+Portions copyright (c) 2008 Jonathan Wight
+Portions copyright (c) 2011 Tumblr
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -35,7 +41,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 </string>
 			<key>Title</key>
-			<string>AFNetworking</string>
+			<string>OAuthConsumer</string>
 			<key>Type</key>
 			<string>PSGroupSpecifier</string>
 		</dict>
