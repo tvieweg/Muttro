@@ -34,7 +34,7 @@
     
     [self.window makeKeyAndVisible];
     
-    /*
+    /*Local notifications - uncomment to add local notifications back into program. 
     UIUserNotificationType types =
     UIUserNotificationTypeSound | UIUserNotificationTypeAlert;
     
