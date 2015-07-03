@@ -95,7 +95,7 @@ const float kMaxTimeBetweenMapUpdates = 15.0;
         self.locationManager = [[CLLocationManager alloc] init];
         
     }
-    [self.locationManager requestAlwaysAuthorization];
+    [self.locationManager requestWhenInUseAuthorization];
     self.locationManager.delegate = self;
     
     // Set a movement threshold for new events.

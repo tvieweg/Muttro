@@ -123,9 +123,10 @@ const double kPTMetersToMilesConversion = 0.000621371;
 
 - (void)setDistanceToPoiText:(POITableViewCell *)cell {
     cell.searchAnnotation.distanceToUser = [[DataSource sharedInstance] findDistanceFromUser:cell.searchAnnotation];
-    NSString *textToDisplay = [NSString new];
     CLLocationDistance distanceInMiles = cell.searchAnnotation.distanceToUser * kPTMetersToMilesConversion;
     
+    NSString *textToDisplay;
+
     if (distanceInMiles < 1.0) {
         textToDisplay = @"<1 mi away";
 

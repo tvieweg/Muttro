@@ -62,7 +62,8 @@ static NSString * const kRadiusFilter      = @"25000"; //approx 15 miles
  */
 - (NSURLRequest *)_searchRequestWithTerm:(NSString *)term category:category location:(NSString *)location {
   
-    NSDictionary *params = [[NSDictionary alloc] init];
+    NSDictionary *params;
+    
     if ([category isEqualToString:@"All"]) {
         params = @{
                  @"term": term,
