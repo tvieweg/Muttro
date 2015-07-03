@@ -39,40 +39,39 @@ const float kMaxEpsilon = 0.005;
     [[DataSource sharedInstance] addObserver:self forKeyPath:@"favoriteLocations" options:0 context:nil];
     
     [[DataSource sharedInstance] addObserver:self forKeyPath:@"currentLocation" options:0 context:nil];
-
     
-    //init search bar
+    //search bar
     self.searchBar = [[UISearchBar alloc] init];
     self.searchBar.delegate = self;
     self.searchBar.backgroundColor = [UIColor whiteColor];
     self.searchBar.alpha = 0.8;
 
-    //init Quick Search toolbar
+    //Quick Search toolbar
     self.quickSearchToolbar = [[QuickSearchToolbar alloc] init];
     self.quickSearchToolbar.delegate = self;
     
-    //init MapView
+    //MapView
     self.mapView = [[MKMapView alloc] init];
     self.mapView.showsUserLocation = YES;
     self.mapView.delegate = self;
     self.mapView.rotateEnabled = NO; 
     
-    //init Bar Buttons
+    //Bar Buttons
     UIBarButtonItem *locationButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"location"] style:UIBarButtonItemStylePlain target:self action:@selector(locationTapped:)];
     
     UIBarButtonItem *listButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"list"] style:UIBarButtonItemStylePlain target:self action:@selector(listTapped:)];
     
-    //init Gesture Recognizer
+    //Gesture Recognizer
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] init];
     self.hideKeyboardTapGestureRecognizer = tap;
     [self.hideKeyboardTapGestureRecognizer addTarget:self action:@selector(tapGestureDidFire:)];
     
-    //add Subviews
+    //Subviews
     [self.view addGestureRecognizer:tap];
     self.navigationItem.rightBarButtonItem = locationButton;
     self.navigationItem.leftBarButtonItem = listButton;
     
-    //Custom coloring
+    //Custom color scheme
     UIColor *primaryColor = [UIColor colorWithRed:6/255.0 green:142/255.0 blue:192/255.0 alpha:1.0];
     UIColor *textColor = [UIColor colorWithRed:235/255.0 green:240/255.0 blue:240/255.0 alpha:1.0];
 
@@ -87,14 +86,15 @@ const float kMaxEpsilon = 0.005;
     
 }
 
-- (void) viewDidAppear:(BOOL)animated {
+- (void) viewWillAppear:(BOOL)animated {
     
     NSArray *selectedAnnotations = self.mapView.selectedAnnotations;
     for(id annotation in selectedAnnotations) {
         [self.mapView deselectAnnotation:annotation animated:NO];
     }
     [self.mapView removeAnnotations:self.mapView.annotations];
-    
+    [self addSearchAndFavoriteAnnotationsToMap];
+
     if ([DataSource sharedInstance].locationWasTapped) {
         
         [DataSource sharedInstance].shouldUpdateMapRegionToUserLocation = NO;
@@ -105,29 +105,59 @@ const float kMaxEpsilon = 0.005;
     } else {
         [DataSource sharedInstance].shouldUpdateMapRegionToUserLocation = YES;
     }
-    [self addSearchAndFavoriteAnnotationsToMap];
 }
 
 #pragma mark - Search
 
 -(void)searchUsingSearchQuery:(NSString *)searchText andCategory:(NSString *)category {
     
+    //Show network activity
+    [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
+    
     [[DataSource sharedInstance] searchYelpWithParameters:searchText category:category inLocation:[[CLLocation alloc] initWithLatitude:self.mapView.centerCoordinate.latitude longitude:self.mapView.centerCoordinate.longitude] withCompletionBlock:^(NSError *error) {
         
-        NSArray *selectedAnnotations = self.mapView.selectedAnnotations;
-        for(id annotation in selectedAnnotations) {
-            [self.mapView deselectAnnotation:annotation animated:NO];
+        if (error != nil) {
+            if ([error.domain isEqualToString:@"Nothing Found"]) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"No Results",nil)
+                                                message:NSLocalizedString(@"Whoops! Nothing to see here. Try zooming in on the map to your location, or moving to another location.", nil)
+                                               delegate:nil
+                                      cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil] show];
+                    [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+                });
+                
+                return;
+                
+            } else {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Map Error",nil)
+                                                message:[error localizedFailureReason]
+                                               delegate:nil
+                                      cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil] show];
+                    [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+                    
+                });
+                
+                return;
+                
+            }
+        } else {
+            
+            NSArray *selectedAnnotations = self.mapView.selectedAnnotations;
+            for(id annotation in selectedAnnotations) {
+                [self.mapView deselectAnnotation:annotation animated:NO];
+            }
+            
+            [self.mapView removeAnnotations:self.mapView.annotations];
+            
+            [self.mapView setRegion:[DataSource sharedInstance].yelpSearchResultsRegion];
+            [self addSearchAndFavoriteAnnotationsToMap];
+            
+            [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+            
+            return;
         }
-
-        [self.mapView removeAnnotations:self.mapView.annotations];
-        
-        [self.mapView setRegion:[DataSource sharedInstance].yelpSearchResultsRegion];
-        [self addSearchAndFavoriteAnnotationsToMap];
-        
-        //ADD A LABEL HIGHLIGHTING RESULTS
-        
     }];
-    
 }
 
 -(void)addSearchAndFavoriteAnnotationsToMap {
@@ -140,13 +170,13 @@ const float kMaxEpsilon = 0.005;
 #pragma mark - Search Bar Delegate
 
 - (void)searchBarSearchButtonClicked:(UISearchBar *)searchBar {
-    /*NSMutableString *dogSearchText = [self.searchBar.text mutableCopy];
+    NSMutableString *dogSearchText = [self.searchBar.text mutableCopy];
     
     if (![dogSearchText containsString:@"dog"]) {
         [dogSearchText insertString:@"dog " atIndex:0];
-    }*/
+    }
 
-    [self searchUsingSearchQuery:self.searchBar.text andCategory:@"All"];
+    [self searchUsingSearchQuery:dogSearchText andCategory:@"All"];
     [self.searchBar resignFirstResponder];
     
 }
@@ -247,8 +277,8 @@ const float kMaxEpsilon = 0.005;
             [self.mapView selectAnnotation:calloutAnnotation animated:YES];
 
             //Move to annotation if the view is not contained on the current view.
-            if (!CGRectContainsRect(self.mapView.frame, calloutAnnotation.annotationView.frame)) {
-                [self setMapRegionToLocation:view.annotation.coordinate withSpanRange:self.mapView.region.span.longitudeDelta];
+            if (!CGRectContainsRect(self.mapView.frame, calloutAnnotation.view.frame)) {
+                [self setMapRegionToLocation:view.annotation.coordinate withSpanRange:(self.mapView.region.span.latitudeDelta + self.mapView.region.span.longitudeDelta) / 2];
             }
         });
         
@@ -364,11 +394,9 @@ const float kMaxEpsilon = 0.005;
         //Update annotation marker and refresh callout view.
         
         UIImage *tmpImage = [[UIImage alloc] init];
-        
         tmpImage = [annotationView.searchAnnotation setImageForCategory:annotationView.searchAnnotation.category];
         
         [self.mapView viewForAnnotation:annotationView.searchAnnotation].image = tmpImage;
-        
         [self mapView:self.mapView didSelectAnnotationView:[annotationView.searchAnnotation annotationView]];
         
     } else if (annotationView.searchAnnotation.favoriteState == FavoriteStateNotFavorited) {
@@ -445,6 +473,7 @@ const float kMaxEpsilon = 0.005;
                                                        addressDictionary:nil];
         MKMapItem *mapItem = [[MKMapItem alloc] initWithPlacemark:placemark];
         [mapItem setName:annotationView.searchAnnotation.title];
+        
         // Pass the map item to the Maps app
         [mapItem openInMapsWithLaunchOptions:nil];
     }
@@ -461,7 +490,6 @@ const float kMaxEpsilon = 0.005;
     
     [self.mapView viewForAnnotation:annotationView.searchAnnotation].image = tmpImage;
 }
-
 
 #pragma mark - QuickSearchToolbarDelegate
 

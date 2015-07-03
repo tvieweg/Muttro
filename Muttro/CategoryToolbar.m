@@ -30,7 +30,7 @@ const float kCategoryButtonHeight = 40.0;
     
     if (self) {
         self.backgroundColor = [UIColor whiteColor];
-        self.alpha = 0.9;
+        self.alpha = 1.0;
         self.buttons = [NSMutableArray new];
         
         self.parkButton = [[UIButton alloc] init];

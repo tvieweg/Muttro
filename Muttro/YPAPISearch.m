@@ -26,6 +26,7 @@ static NSString * const kRadiusFilter      = @"25000"; //approx 15 miles
   
   NSURLRequest *searchRequest = [self _searchRequestWithTerm:term category:category location:location];
   NSURLSession *session = [NSURLSession sharedSession];
+    
   [[session dataTaskWithRequest:searchRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
 
     NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
@@ -37,14 +38,15 @@ static NSString * const kRadiusFilter      = @"25000"; //approx 15 miles
       if (searchResponseJSON) {
           
         completionHandler(searchResponseJSON, error); //return response
-          
-      } else {
-        completionHandler(nil, error); // Nothing was found
+          return;
       }
     } else {
-      completionHandler(nil, error); // An error happened or the HTTP response is not a 200 OK
+      
+        completionHandler(nil, error); // An error happened or the HTTP response is not a 200 OK
+        return; 
+    
     }
-  }]resume];
+    }] resume];
 }
 
 

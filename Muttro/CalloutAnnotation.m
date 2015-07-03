@@ -12,7 +12,6 @@
 
 @interface CalloutAnnotation ()
 
-@property (nonatomic, strong) CalloutAnnotationView *view;
 
 @end
 

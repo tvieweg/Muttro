@@ -23,6 +23,7 @@ const float kMaxTimeBetweenMapUpdates = 15.0;
 @property (nonatomic, strong) NSMutableArray *recentSearches;
 @property (nonatomic, strong) NSMutableArray *favoriteLocations;
 @property (nonatomic, strong) NSMutableArray *searchResultsAnnotations;
+@property (nonatomic, assign) BOOL wasSearchError;
 
 @end
 
@@ -43,6 +44,7 @@ const float kMaxTimeBetweenMapUpdates = 15.0;
     if (self) {
         
         //initialize arrays.
+        self.wasSearchError = NO;
         self.recentSearches = [NSMutableArray new];
         self.favoriteLocations = [NSMutableArray new];
         self.searchResultsAnnotations = [NSMutableArray new];
@@ -160,15 +162,11 @@ const float kMaxTimeBetweenMapUpdates = 15.0;
 
 - (void) searchYelpWithParameters:(NSString *)parameters category:(NSString *)category inLocation:(CLLocation *)location withCompletionBlock:(SearchCompletionBlock)completionHandler {
     self.shouldUpdateMapRegionToUserLocation = NO;
-    
+
     //include recent search in search history
     [self updateRecentSearches:parameters];
     
-    //Show network activity
-    [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
-    
     NSMutableString *locationString = [NSMutableString stringWithFormat:@"%f,%f", location.coordinate.latitude, location.coordinate.longitude];
-    NSError *error = [[NSError alloc] init];
     YPAPISearch *APISearch = [[YPAPISearch alloc] init];
     
     dispatch_group_t requestGroup = dispatch_group_create();
@@ -176,56 +174,68 @@ const float kMaxTimeBetweenMapUpdates = 15.0;
     dispatch_group_enter(requestGroup);
     
     [APISearch queryYelpInfoForTerm:parameters location:locationString  category:category completionHandler:^(NSDictionary *jsonResponse, NSError *error)  {
-        
-        NSLog(@"%ld", [jsonResponse count]);
-        
-        if (error != nil || [jsonResponse count] == 0) {
-            [[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Map Error",nil)
-                                        message:[error localizedFailureReason]
-                                       delegate:nil
-                              cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil] show];
+                
+        if (error != nil) {
+            
+            self.wasSearchError = YES;
+           
+            completionHandler(error);
+            dispatch_group_leave(requestGroup);
+
             return;
         }
         
         NSArray *businessArray = jsonResponse[@"businesses"];
         
-        
         if ([businessArray count] == 0) {
-            [[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"No Results",nil)
-                                        message:nil
-                                       delegate:nil
-                              cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil] show];
+            
+            self.wasSearchError = YES;
+            
+
+            NSMutableDictionary* details = [NSMutableDictionary dictionary];
+            [details setValue:@"No results found" forKey:NSLocalizedDescriptionKey];
+            // populate the error object with the details
+            NSError *noResultsError = [NSError errorWithDomain:@"Nothing Found" code:200 userInfo:details];
+
+            completionHandler(noResultsError);
+            dispatch_group_leave(requestGroup);
+
             return;
+            
+        } else {
+            
+            //Set map region
+            double tmpLatitude = [jsonResponse[@"region"][@"center"][@"latitude"] floatValue];
+            double tmpLongitude = [jsonResponse[@"region"][@"center"][@"longitude"] floatValue];
+            double tmpLatitudeDelta =[jsonResponse[@"region"][@"span"][@"latitude_delta"] floatValue];
+            double tmpLongitudeDelta =[jsonResponse[@"region"][@"span"][@"longitude_delta"] floatValue];
+            CLLocationCoordinate2D tmpCenterCoordinate = CLLocationCoordinate2DMake(tmpLatitude, tmpLongitude);
+            MKCoordinateSpan tmpCoordinateSpan = MKCoordinateSpanMake(tmpLatitudeDelta, tmpLongitudeDelta);
+            
+            self.yelpSearchResultsRegion = MKCoordinateRegionMake(tmpCenterCoordinate, tmpCoordinateSpan);
+            
+            self.yelpSearchResults = businessArray;
+            
+            dispatch_group_leave(requestGroup);
+            
+            return; 
+            
         }
         
-                //Set map region
-        double tmpLatitude = [jsonResponse[@"region"][@"center"][@"latitude"] floatValue];
-        double tmpLongitude = [jsonResponse[@"region"][@"center"][@"longitude"] floatValue];
-        double tmpLatitudeDelta =[jsonResponse[@"region"][@"span"][@"latitude_delta"] floatValue];
-        double tmpLongitudeDelta =[jsonResponse[@"region"][@"span"][@"longitude_delta"] floatValue];
-        CLLocationCoordinate2D tmpCenterCoordinate = CLLocationCoordinate2DMake(tmpLatitude, tmpLongitude);
-        MKCoordinateSpan tmpCoordinateSpan = MKCoordinateSpanMake(tmpLatitudeDelta, tmpLongitudeDelta);
-        
-        self.yelpSearchResultsRegion = MKCoordinateRegionMake(tmpCenterCoordinate, tmpCoordinateSpan);
-        
-
-        self.yelpSearchResults = businessArray;
-        
-        dispatch_group_leave(requestGroup);
-        
     }];
-    
+
     dispatch_group_wait(requestGroup, DISPATCH_TIME_FOREVER); // This avoids the program exiting before all our asynchronous callbacks have been made.
     
-    //Hide network activity
-    [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
-    
-    [self createAnnotationsForYelpItems:self.yelpSearchResults];
+    if (self.wasSearchError == NO) {
+        [self createAnnotationsForYelpItems:self.yelpSearchResults];
+        if (completionHandler) {
+            completionHandler(nil);
+        }
 
-    if (completionHandler) {
-        completionHandler(error);
+    } else {
+        self.wasSearchError = NO;
     }
-
+    
 }
 
 

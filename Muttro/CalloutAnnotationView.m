@@ -12,7 +12,7 @@
 #import "CategoryToolbar.h"
 
 const float kCAAnnotationFrameWidth = 280.0;
-const float kCAAnnotationFrameHeight = 140.0;
+const float kCAAnnotationFrameHeight = 160.0;
 const float kCAAnnotationFrameOffsetX = 0.0;
 const float kCAAnnotationFrameOffsetY = 100.0;
 const float kCALabelHeight = 35.0;
@@ -31,6 +31,7 @@ const float kCAButtonSpacing = 6.0;
 @property (nonatomic, strong) UIButton *categoryButton;
 @property (nonatomic, strong) CategoryToolbar *categoryBar;
 @property (nonatomic, strong) UITapGestureRecognizer *hideCategoryGestureRecognizer;
+@property (nonatomic, strong) UIImageView *yelpImage;
 
 
 @end
@@ -57,7 +58,6 @@ const float kCAButtonSpacing = 6.0;
         //Add title and information
         self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(10, 0, self.bounds.size.width - 50, kCALabelHeight)];
         self.titleLabel.text = self.searchAnnotation.title;
-        [self addSubview:self.titleLabel];
         
         CGRect urlFrame = CGRectMake(0, CGRectGetMaxY(self.titleLabel.frame), self.frame.size.width, kCALabelHeight);
         self.annotationURL = [[UITextView alloc] initWithFrame:urlFrame];
@@ -69,7 +69,6 @@ const float kCAButtonSpacing = 6.0;
             self.annotationURL.text = @"(no website listed)"; 
         }
         [self.annotationURL setDataDetectorTypes:UIDataDetectorTypeLink];
-        [self addSubview:self.annotationURL];
         
         CGRect phoneNumberFrame = CGRectMake(0, CGRectGetMaxY(self.annotationURL.frame), self.frame.size.width, kCALabelHeight - 5);
         self.annotationPhoneNumber = [[UITextView alloc] initWithFrame:phoneNumberFrame];
@@ -81,45 +80,53 @@ const float kCAButtonSpacing = 6.0;
             self.annotationPhoneNumber.text = @"(no phone listed)";
         }
         [self.annotationPhoneNumber setDataDetectorTypes:UIDataDetectorTypePhoneNumber];
-        [self addSubview:self.annotationPhoneNumber];
 
-        //Add buttons
+        
+        //Favorite button
         self.favoriteButton = [[FavoritesButton alloc] init];
         [self.favoriteButton setFavoriteButtonState:self.searchAnnotation.favoriteState];
         self.favoriteButton.frame = CGRectMake(self.frame.size.width - 50, -5, 44, 44);
         [self.favoriteButton addTarget:self action:@selector(favoritePressed:) forControlEvents:UIControlEventTouchUpInside];
-        [self addSubview:self.favoriteButton];
         
-        self.categoryButton = [[UIButton alloc] initWithFrame:CGRectMake(10, self.bounds.size.height - kCAButtonWidth - kCAButtonSpacing, kCAButtonWidth, kCAButtonWidth)];
+        
+        //Category button
+        self.categoryButton = [[UIButton alloc] initWithFrame:CGRectMake(10, self.bounds.size.height - kCAButtonWidth - kCAButtonSpacing - 20, kCAButtonWidth, kCAButtonWidth)];
         [self setImageForCategoryButton]; 
         [self.categoryButton addTarget:self action:@selector(categoryPressed:) forControlEvents:UIControlEventTouchUpInside];
-        [self addSubview:self.categoryButton];
         
+        
+        //Yelp image
+        self.yelpImage = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"poweredByYelp"]];
+        self.yelpImage.frame = CGRectMake(self.frame.size.width - 90, self.frame.size.height - 22, 80, 17);;
+        
+        
+        //Action Buttons
+        self.phoneButton = [[UIButton alloc] initWithFrame:CGRectMake(self.bounds.size.width - kCAButtonWidth*3 - kCAButtonSpacing * 3, self.bounds.size.height - kCAButtonWidth - kCAButtonSpacing - 20, kCAButtonWidth, kCAButtonWidth)];
+        [self.phoneButton setImage:[UIImage imageNamed:@"phone"] forState:UIControlStateNormal];
+        [self.phoneButton addTarget:self action:@selector(phonePressed:) forControlEvents:UIControlEventTouchUpInside];
+        
+        self.webButton = [[UIButton alloc] initWithFrame:CGRectMake(self.bounds.size.width - kCAButtonWidth * 2 - kCAButtonSpacing * 2, self.bounds.size.height - kCAButtonWidth - kCAButtonSpacing - 20, kCAButtonWidth, kCAButtonWidth)];
+        [self.webButton setImage:[UIImage imageNamed:@"web"] forState:UIControlStateNormal];
+        [self.webButton addTarget:self action:@selector(webPressed:) forControlEvents:UIControlEventTouchUpInside];
+        
+        self.mapButton = [[UIButton alloc] initWithFrame:CGRectMake(self.bounds.size.width - kCAButtonWidth - kCAButtonSpacing, self.bounds.size.height - kCAButtonWidth - kCAButtonSpacing - 20, kCAButtonWidth, kCAButtonWidth)];
+        [self.mapButton setImage:[UIImage imageNamed:@"directions"] forState:UIControlStateNormal];
+        [self.mapButton addTarget:self action:@selector(mapPressed:) forControlEvents:UIControlEventTouchUpInside];
+        
+        
+        //Category popout
         self.categoryBar = [[CategoryToolbar alloc] init];
         self.categoryBar.delegate = self;
         self.categoryBar.backgroundColor = [UIColor colorWithRed:250/255.0 green:250/255.0 blue:250/255.0 alpha:1.0];
         
-        self.phoneButton = [[UIButton alloc] initWithFrame:CGRectMake(self.bounds.size.width - kCAButtonWidth*3 - kCAButtonSpacing * 3, self.bounds.size.height - kCAButtonWidth - kCAButtonSpacing, kCAButtonWidth, kCAButtonWidth)];
-        [self.phoneButton setImage:[UIImage imageNamed:@"phone"] forState:UIControlStateNormal];
-        [self.phoneButton addTarget:self action:@selector(phonePressed:) forControlEvents:UIControlEventTouchUpInside];
-        [self addSubview:self.phoneButton];
         
-        self.webButton = [[UIButton alloc] initWithFrame:CGRectMake(self.bounds.size.width - kCAButtonWidth * 2 - kCAButtonSpacing * 2, self.bounds.size.height - kCAButtonWidth - kCAButtonSpacing, kCAButtonWidth, kCAButtonWidth)];
-        [self.webButton setImage:[UIImage imageNamed:@"web"] forState:UIControlStateNormal];
-        [self.webButton addTarget:self action:@selector(webPressed:) forControlEvents:UIControlEventTouchUpInside];
-        [self addSubview:self.webButton];
-        
-        self.mapButton = [[UIButton alloc] initWithFrame:CGRectMake(self.bounds.size.width - kCAButtonWidth - kCAButtonSpacing, self.bounds.size.height - kCAButtonWidth - kCAButtonSpacing, kCAButtonWidth, kCAButtonWidth)];
-        [self.mapButton setImage:[UIImage imageNamed:@"directions"] forState:UIControlStateNormal];
-        [self.mapButton addTarget:self action:@selector(mapPressed:) forControlEvents:UIControlEventTouchUpInside];
-        [self addSubview:self.mapButton];
-        
-        //init Gesture Recognizer
+        //Gesture Recognizer
         UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] init];
         self.hideCategoryGestureRecognizer = tap;
         [self.hideCategoryGestureRecognizer addTarget:self action:@selector(tapGestureDidFire:)];
         [self addGestureRecognizer:self.hideCategoryGestureRecognizer];
 
+        
         //Create line divider in view
         UIBezierPath *path = [UIBezierPath bezierPath];
         [path moveToPoint:CGPointMake(0, CGRectGetMaxY(self.titleLabel.frame))];
@@ -130,6 +137,12 @@ const float kCAButtonSpacing = 6.0;
         shapeLayer.strokeColor = [[UIColor grayColor] CGColor];
         shapeLayer.lineWidth = 0.5;
         shapeLayer.fillColor = [[UIColor clearColor] CGColor];
+
+        NSArray *subviews = @[self.titleLabel, self.annotationURL, self.annotationPhoneNumber, self.favoriteButton, self.categoryButton, self.yelpImage, self.phoneButton, self.webButton, self.mapButton];
+        
+        for (UIView *view in subviews) {
+            [self addSubview:view];
+        }
         
         [self.layer addSublayer:shapeLayer];
         
@@ -178,6 +191,7 @@ const float kCAButtonSpacing = 6.0;
             [self addSubview:self.categoryBar];
         }
     } else {
+        
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle: NSLocalizedString(@"Heel boy!", @"Error")
                                                         message: NSLocalizedString(@"You can only set categories on a favorite item", @"Favorite category warning")
                                                        delegate: nil

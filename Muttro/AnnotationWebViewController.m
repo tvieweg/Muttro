@@ -15,14 +15,15 @@ const float kAWbuttonHeight = 40;
 
 @property (nonatomic, strong) UIWebView *webView;
 @property (nonatomic, strong) NSURL *url;
+
 @property (nonatomic, strong) UIActivityIndicatorView *activityIndicator;
+
 @property (nonatomic, strong) UIButton *backButton;
 @property (nonatomic, strong) UIButton *forwardButton;
 @property (nonatomic, strong) UIButton *stopButton;
 @property (nonatomic, strong) UIButton *reloadButton;
 
 @property (nonatomic, assign) NSUInteger frameCount;
-
 
 @end
 
@@ -38,7 +39,7 @@ const float kAWbuttonHeight = 40;
     // Do any additional setup after loading the view.
     self.webView = [[UIWebView alloc] init];
     self.webView.delegate = self;
-
+    
     self.backButton = [UIButton buttonWithType:UIButtonTypeSystem];
     [self.backButton setEnabled:NO];
     
@@ -62,7 +63,7 @@ const float kAWbuttonHeight = 40;
     
     [self.reloadButton setTitle:NSLocalizedString(@"Refresh", @"Reload comnmand") forState:UIControlStateNormal];
     [self.reloadButton addTarget:self.webView action:@selector(reload) forControlEvents:UIControlEventTouchUpInside];
-
+    
     for (UIView *viewToAdd in @[self.webView, self.backButton, self.forwardButton, self.stopButton, self.reloadButton]) {
         [self.view addSubview:viewToAdd];
     }
@@ -94,7 +95,6 @@ const float kAWbuttonHeight = 40;
 
 #pragma mark - UIWebViewDelegate
 
-
 - (void)webViewDidStartLoad:(UIWebView *)webView {
     self.frameCount++;
     [self updateButtons];
@@ -105,22 +105,26 @@ const float kAWbuttonHeight = 40;
     [self updateButtons];
 }
 
-
 - (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error {
     
     if (error.code != -999) {
         
-        UIAlertView *alert = [[UIAlertView alloc] initWithTitle: NSLocalizedString(@"Error", @"Error")
-                                                        message:[error localizedDescription]
-                                                       delegate: nil
-                                              cancelButtonTitle: NSLocalizedString(@"OK", nil)
-                                              otherButtonTitles: nil];
-        
-        [alert show];
+        if (error.code == 101) {
+            return;
+        } else {
+            
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle: NSLocalizedString(@"Error", @"Error")
+                                                            message:[error localizedDescription]
+                                                           delegate: nil
+                                                  cancelButtonTitle: NSLocalizedString(@"OK", nil)
+                                                  otherButtonTitles: nil];
+            
+            [alert show];
+        }
     }
     [self updateButtons];
     self.frameCount--;
-
+    
 }
 
 - (void) updateButtons {
@@ -137,6 +141,5 @@ const float kAWbuttonHeight = 40;
     self.reloadButton.enabled = self.frameCount == 0;
     
 }
-
 
 @end
