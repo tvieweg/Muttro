@@ -7,6 +7,9 @@
 //
 
 #import "DataSource.h"
+#import "YPAPISearch.h"
+#import <AddressBookUI/AddressBookUI.h>
+
 
 const float kCoordinateEpsilon = 0.005;
 const float kDistanceThreshold = 200;
@@ -20,6 +23,7 @@ const float kMaxTimeBetweenMapUpdates = 15.0;
 @property (nonatomic, strong) NSMutableArray *recentSearches;
 @property (nonatomic, strong) NSMutableArray *favoriteLocations;
 @property (nonatomic, strong) NSMutableArray *searchResultsAnnotations;
+@property (nonatomic, assign) BOOL wasSearchError;
 
 @end
 
@@ -40,6 +44,7 @@ const float kMaxTimeBetweenMapUpdates = 15.0;
     if (self) {
         
         //initialize arrays.
+        self.wasSearchError = NO;
         self.recentSearches = [NSMutableArray new];
         self.favoriteLocations = [NSMutableArray new];
         self.searchResultsAnnotations = [NSMutableArray new];
@@ -77,6 +82,8 @@ const float kMaxTimeBetweenMapUpdates = 15.0;
     }
     return self;
 }
+
+
 
 #pragma mark - Location Manager
 
@@ -117,6 +124,8 @@ const float kMaxTimeBetweenMapUpdates = 15.0;
     }
 }
 
+#pragma mark - Notifications
+
 - (void) checkForNearbyPOIs {
     
     if (self.favoriteLocations.count > 0) {
@@ -148,6 +157,87 @@ const float kMaxTimeBetweenMapUpdates = 15.0;
         }
     }
 }
+
+#pragma mark - Search
+
+- (void) searchYelpWithParameters:(NSString *)parameters category:(NSString *)category inLocation:(CLLocation *)location withCompletionBlock:(SearchCompletionBlock)completionHandler {
+    self.shouldUpdateMapRegionToUserLocation = NO;
+
+    //include recent search in search history
+    [self updateRecentSearches:parameters];
+    
+    NSMutableString *locationString = [NSMutableString stringWithFormat:@"%f,%f", location.coordinate.latitude, location.coordinate.longitude];
+    YPAPISearch *APISearch = [[YPAPISearch alloc] init];
+    
+    dispatch_group_t requestGroup = dispatch_group_create();
+    
+    dispatch_group_enter(requestGroup);
+    
+    [APISearch queryYelpInfoForTerm:parameters location:locationString  category:category completionHandler:^(NSDictionary *jsonResponse, NSError *error)  {
+                
+        if (error != nil) {
+            
+            self.wasSearchError = YES;
+           
+            completionHandler(error);
+            dispatch_group_leave(requestGroup);
+
+            return;
+        }
+        
+        NSArray *businessArray = jsonResponse[@"businesses"];
+        
+        if ([businessArray count] == 0) {
+            
+            self.wasSearchError = YES;
+            
+
+            NSMutableDictionary* details = [NSMutableDictionary dictionary];
+            [details setValue:@"No results found" forKey:NSLocalizedDescriptionKey];
+            // populate the error object with the details
+            NSError *noResultsError = [NSError errorWithDomain:@"Nothing Found" code:200 userInfo:details];
+
+            completionHandler(noResultsError);
+            dispatch_group_leave(requestGroup);
+
+            return;
+            
+        } else {
+            
+            //Set map region
+            double tmpLatitude = [jsonResponse[@"region"][@"center"][@"latitude"] floatValue];
+            double tmpLongitude = [jsonResponse[@"region"][@"center"][@"longitude"] floatValue];
+            double tmpLatitudeDelta =[jsonResponse[@"region"][@"span"][@"latitude_delta"] floatValue];
+            double tmpLongitudeDelta =[jsonResponse[@"region"][@"span"][@"longitude_delta"] floatValue];
+            CLLocationCoordinate2D tmpCenterCoordinate = CLLocationCoordinate2DMake(tmpLatitude, tmpLongitude);
+            MKCoordinateSpan tmpCoordinateSpan = MKCoordinateSpanMake(tmpLatitudeDelta, tmpLongitudeDelta);
+            
+            self.yelpSearchResultsRegion = MKCoordinateRegionMake(tmpCenterCoordinate, tmpCoordinateSpan);
+            
+            self.yelpSearchResults = businessArray;
+            
+            dispatch_group_leave(requestGroup);
+            
+            return; 
+            
+        }
+        
+    }];
+
+    dispatch_group_wait(requestGroup, DISPATCH_TIME_FOREVER); // This avoids the program exiting before all our asynchronous callbacks have been made.
+    
+    if (self.wasSearchError == NO) {
+        [self createAnnotationsForYelpItems:self.yelpSearchResults];
+        if (completionHandler) {
+            completionHandler(nil);
+        }
+
+    } else {
+        self.wasSearchError = NO;
+    }
+    
+}
+
 
 - (void) updateRecentSearches:(NSString *)latestSearch {
     
@@ -183,57 +273,6 @@ const float kMaxTimeBetweenMapUpdates = 15.0;
     });
 }
 
--(void) searchWithParameters:(NSString *)parameters withCompletionBlock:(SearchCompletionBlock)completionHandler {
-    self.shouldUpdateMapRegionToUserLocation = NO; 
-    MKLocalSearchRequest *searchRequest = [[MKLocalSearchRequest alloc] init];
-    NSString *dog = @"dog ";
-    NSString *parametersWithDogAppended = [dog stringByAppendingString:parameters];
-    searchRequest.naturalLanguageQuery = parametersWithDogAppended;
-    
-    //include recent search in search history
-    [self updateRecentSearches:parameters];
-    searchRequest.region = self.region;
-
-    //Show network activity
-    [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
-    
-    //Local search.
-    MKLocalSearch *localSearch = [[MKLocalSearch alloc] initWithRequest:searchRequest];
-    
-    if (localSearch.isSearching) {
-        //TODO: Add log to see if this is actually working. 
-        return;
-        
-    } else {
-        
-        [localSearch startWithCompletionHandler:^(MKLocalSearchResponse *response, NSError *error){
-            
-            [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
-            
-            if (error != nil) {
-                [[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Map Error",nil)
-                                            message:[error localizedFailureReason]
-                                           delegate:nil
-                                  cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil] show];
-                return;
-            }
-            
-            if ([response.mapItems count] == 0) {
-                [[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"No Results",nil)
-                                            message:nil
-                                           delegate:nil
-                                  cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil] show];
-                return;
-            }
-            self.searchResults = response;
-            [self createAnnotationsForMapItems:[self.searchResults mapItems]];
-            if (completionHandler) {
-                completionHandler(error);
-            }
-        }];
-    }
-}
-
 - (NSMutableArray *) checkFavoritesAgainstSearchAndRemoveDuplicates {
     NSMutableArray *itemsToRemove = [NSMutableArray new];
     for (SearchAnnotation *annotation in self.searchResultsAnnotations) {
@@ -259,6 +298,18 @@ const float kMaxTimeBetweenMapUpdates = 15.0;
     [self.searchResultsAnnotations removeAllObjects];
     for (MKMapItem *mapItem in mapItems) {
         SearchAnnotation *annotation = [[SearchAnnotation alloc] initWithMapItem:mapItem];
+        
+        annotation.distanceToUser = [self findDistanceFromUser:annotation];
+        
+        [self.searchResultsAnnotations addObject:annotation];
+        
+    }
+}
+
+- (void) createAnnotationsForYelpItems:(NSArray *)yelpItems {
+    [self.searchResultsAnnotations removeAllObjects];
+    for (NSDictionary *yelpItem in yelpItems) {
+        SearchAnnotation *annotation = [[SearchAnnotation alloc] initWithYelpItem:yelpItem];
         
         annotation.distanceToUser = [self findDistanceFromUser:annotation];
         
@@ -311,7 +362,7 @@ const float kMaxTimeBetweenMapUpdates = 15.0;
 - (void) setFavoriteCategory:(SearchAnnotation *)annotation toCategory:(NSInteger)category {
     
     NSInteger index = [self.favoriteLocations indexOfObject:annotation];
-    annotation.favoriteCategory = category; 
+    annotation.category = category;
     [self replaceObjectInFavoriteLocationsAtIndex:index withObject:annotation];
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{

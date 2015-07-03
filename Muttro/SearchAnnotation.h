@@ -10,34 +10,37 @@
 #import <MapKit/MapKit.h>
 #import "FavoritesButton.h"
 
-typedef NS_ENUM(NSInteger, FavoriteCategory) {
-    FavoriteCategoryNoCategory      = 0,
-    FavoriteCategoryPark            = 1,
-    FavoriteCategoryVet             = 2,
-    FavoriteCategoryGroomers        = 3,
-    FavoriteCategoryDayCare         = 4,
-    FavoriteCategoryPetStore        = 5
+typedef NS_ENUM(NSInteger, Category) {
+    CategoryNoCategory      = 0,
+    CategoryPark            = 1,
+    CategoryVet             = 2,
+    CategoryGroomers        = 3,
+    CategoryDayCare         = 4,
+    CategoryPetStore        = 5
 };
 
 @interface SearchAnnotation : NSObject <MKAnnotation, NSCoding>
 
 @property (nonatomic, assign) CLLocationCoordinate2D coordinate;
 @property (copy, nonatomic) NSString *title;
-@property (copy, nonatomic) NSString *subtitle;
 @property (nonatomic, copy) NSString *phoneNumber;
 @property (nonatomic, strong) NSURL *url;
 @property (nonatomic, assign) CLLocationDistance distanceToUser;
 
 @property (nonatomic, assign) FavoriteState favoriteState;
-@property (nonatomic, assign) FavoriteCategory favoriteCategory;
+@property (nonatomic, assign) Category category;
 
 - (void)setCoordinate:(CLLocationCoordinate2D)newCoordinate;
 
--(id)initWithMapItem:(MKMapItem *)mapItem; 
+-(id)initWithMapItem:(MKMapItem *)mapItem;
+
+-(id)initWithYelpItem:(NSDictionary *)yelpItem; 
 
 -(id)initWithTitle:(NSString *)newTitle Location:(CLLocationCoordinate2D)location;
 - (MKAnnotationView *)annotationView;
 
-- (UIImage *) setImageForFavoriteCategory:(NSInteger)favoriteCategory; 
+- (UIImage *) setImageForCategory:(NSInteger)category;
+
+- (void) setInitialAnnotationCategoryForPOI:(NSDictionary *)yelpItem; 
 
 @end

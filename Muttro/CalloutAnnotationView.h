@@ -27,7 +27,6 @@
 - (instancetype) initWithAnnotation:(SearchAnnotation *)annotation reuseIdentifier:(NSString *)reuseIdentifier;
 
 @property (nonatomic, strong) SearchAnnotation *searchAnnotation;
-
 @property (nonatomic, weak) id <CalloutAnnotationViewDelegate> delegate;
 
 - (void) setImageForCategoryButton; 

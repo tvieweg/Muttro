@@ -62,25 +62,6 @@ const double kPTMetersToMilesConversion = 0.000621371;
         return @"Search Results";
 }
 
-/*- (void) tableView:(UITableView *)tableView willDisplayHeaderView:(UIView *)view forSection:(NSInteger)section {
-    UIColor *primaryColor = [UIColor colorWithRed:42/255.0 green:72/255.0 blue:136/255.0 alpha:1.0];
-    UIColor *secondaryColor = [UIColor colorWithRed:82/255.0 green:172/255.0 blue:180/255.0 alpha:1.0];
-    UIColor *textColor = [UIColor colorWithRed:235/255.0 green:240/255.0 blue:240/255.0 alpha:1.0];
-    
-    UITableViewHeaderFooterView *header = (UITableViewHeaderFooterView *)view;
-    [header.textLabel setTextColor:textColor];
-    
-    if (section == 0) {
-        view.tintColor = primaryColor;
-        
-    } else {
-        view.tintColor = secondaryColor;
-
-    }
-
-}*/
-
-
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     POITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"POICell" forIndexPath:indexPath];
     
@@ -136,11 +117,7 @@ const double kPTMetersToMilesConversion = 0.000621371;
 }
 
 - (void) setImageForCellCategoryButton:(POITableViewCell *)cell {
-    if(cell.searchAnnotation.favoriteState == FavoriteStateFavorited) {
-        cell.categoryImage.image = [cell.searchAnnotation setImageForFavoriteCategory:cell.searchAnnotation.favoriteCategory]; 
-    } else {
-        cell.categoryImage.image = [UIImage imageNamed:@"pawprint"];
-    }
+    cell.categoryImage.image = [cell.searchAnnotation setImageForCategory:cell.searchAnnotation.category];
 }
 
 
@@ -160,23 +137,40 @@ const double kPTMetersToMilesConversion = 0.000621371;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-
-    SearchAnnotation *tappedAnnotation = [DataSource sharedInstance].favoriteLocations[indexPath.row];
-    [DataSource sharedInstance].lastTappedAnnotation = tappedAnnotation;
-    [DataSource sharedInstance].locationWasTapped = YES;
     
+    if (indexPath.section == 0) {
 
-    CATransition *transition = [CATransition animation];
-    transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionDefault];
-    transition.duration = 0.45;
-    [transition setType:kCATransitionPush];
-    transition.subtype = kCATransitionFromRight;
-    transition.delegate = self;
-    [self.navigationController.view.layer addAnimation:transition forKey:nil];
-    
-    self.navigationController.navigationBarHidden = NO;
-    [self.navigationController popToRootViewControllerAnimated:NO];
+        SearchAnnotation *tappedAnnotation = [DataSource sharedInstance].favoriteLocations[indexPath.row];
+        [DataSource sharedInstance].lastTappedAnnotation = tappedAnnotation;
+        [DataSource sharedInstance].locationWasTapped = YES;
+        
 
+        CATransition *transition = [CATransition animation];
+        transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionDefault];
+        transition.duration = 0.45;
+        [transition setType:kCATransitionPush];
+        transition.subtype = kCATransitionFromRight;
+        transition.delegate = self;
+        [self.navigationController.view.layer addAnimation:transition forKey:nil];
+        
+        self.navigationController.navigationBarHidden = NO;
+        [self.navigationController popToRootViewControllerAnimated:NO];
+    } else {
+        SearchAnnotation *tappedAnnotation = [DataSource sharedInstance].searchResultsAnnotations[indexPath.row];
+        [DataSource sharedInstance].lastTappedAnnotation = tappedAnnotation;
+        [DataSource sharedInstance].locationWasTapped = YES;
+        
+        CATransition *transition = [CATransition animation];
+        transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionDefault];
+        transition.duration = 0.45;
+        [transition setType:kCATransitionPush];
+        transition.subtype = kCATransitionFromRight;
+        transition.delegate = self;
+        [self.navigationController.view.layer addAnimation:transition forKey:nil];
+        
+        self.navigationController.navigationBarHidden = NO;
+        [self.navigationController popToRootViewControllerAnimated:NO];
+    }
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -195,7 +189,6 @@ const double kPTMetersToMilesConversion = 0.000621371;
     
     self.navigationController.navigationBarHidden = NO;
     [self.navigationController popToRootViewControllerAnimated:NO];
-
     
 }
 
@@ -279,6 +272,5 @@ const double kPTMetersToMilesConversion = 0.000621371;
 - (void) dealloc {
     [[DataSource sharedInstance] removeObserver:self forKeyPath:@"favoriteLocations"];
 }
-
 
 @end

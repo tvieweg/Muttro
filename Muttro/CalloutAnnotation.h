@@ -16,6 +16,7 @@
 - (id)initForAnnotation:(SearchAnnotation *)annotation;
 - (CalloutAnnotationView *)annotationView;
 
+@property (nonatomic, strong) CalloutAnnotationView *view;
 @property (nonatomic, assign) CLLocationCoordinate2D coordinate;
 @property (copy, nonatomic) NSString *title;
 @property (nonatomic, strong) SearchAnnotation *searchAnnotation;

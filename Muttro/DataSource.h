@@ -16,6 +16,7 @@ typedef void (^SearchCompletionBlock)(NSError *error);
 @interface DataSource : NSObject
 
 @property (nonatomic, strong) MKLocalSearchResponse *searchResults;
+@property (nonatomic, strong) NSArray *yelpSearchResults; 
 @property (nonatomic, assign) MKCoordinateRegion region;
 @property (nonatomic, strong, readonly) NSMutableArray *recentSearches;
 @property (nonatomic, strong, readonly) NSMutableArray *searchResultsAnnotations;
@@ -31,13 +32,16 @@ typedef void (^SearchCompletionBlock)(NSError *error);
 @property (nonatomic, strong) NSURL *selectedAnnotationURL; 
 
 @property (nonatomic, strong) CLLocation *currentLocation;
-@property (nonatomic, strong) CLLocation *userLocation; 
+@property (nonatomic, strong) CLLocation *userLocation;
+@property (nonatomic, assign) MKCoordinateRegion yelpSearchResultsRegion;
 
 - (void) deleteFavoriteItem:(SearchAnnotation *)item;
 
 +(instancetype) sharedInstance;
 
-- (void) searchWithParameters:(NSString *)parameters withCompletionBlock:(SearchCompletionBlock)completionHandler;
+//- (void) searchWithParameters:(NSString *)parameters withCompletionBlock:(SearchCompletionBlock)completionHandler;
+
+- (void) searchYelpWithParameters:(NSString *)parameters category:(NSString *)category inLocation:(CLLocation *)location withCompletionBlock:(SearchCompletionBlock)completionHandler;
 
 - (void) toggleFavoriteStatus:(SearchAnnotation *)annotation;
 
