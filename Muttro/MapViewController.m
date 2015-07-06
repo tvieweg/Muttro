@@ -87,6 +87,7 @@ const float kMaxEpsilon = 0.005;
 }
 
 - (void) viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:YES];
     
     NSArray *selectedAnnotations = self.mapView.selectedAnnotations;
     for(id annotation in selectedAnnotations) {
@@ -239,8 +240,7 @@ const float kMaxEpsilon = 0.005;
             
             //Set image when annotation is being reused. 
             SearchAnnotation *tmpAnnotation = (SearchAnnotation *)annotation;
-            UIImage *tmpImage = [[UIImage alloc] init];
-            tmpImage = [tmpAnnotation setImageForCategory:tmpAnnotation.category];
+            UIImage *tmpImage = [tmpAnnotation setImageForCategory:tmpAnnotation.category];
             annotationView.image = tmpImage;
         }
         
@@ -393,8 +393,7 @@ const float kMaxEpsilon = 0.005;
         
         //Update annotation marker and refresh callout view.
         
-        UIImage *tmpImage = [[UIImage alloc] init];
-        tmpImage = [annotationView.searchAnnotation setImageForCategory:annotationView.searchAnnotation.category];
+        UIImage *tmpImage = [annotationView.searchAnnotation setImageForCategory:annotationView.searchAnnotation.category];
         
         [self.mapView viewForAnnotation:annotationView.searchAnnotation].image = tmpImage;
         [self mapView:self.mapView didSelectAnnotationView:[annotationView.searchAnnotation annotationView]];
@@ -485,8 +484,7 @@ const float kMaxEpsilon = 0.005;
     [[DataSource sharedInstance] setFavoriteCategory:annotationView.searchAnnotation toCategory:category];
     [annotationView setImageForCategoryButton];
     
-    UIImage *tmpImage = [[UIImage alloc] init];
-    tmpImage = [annotationView.searchAnnotation setImageForCategory:annotationView.searchAnnotation.category];
+    UIImage *tmpImage = [annotationView.searchAnnotation setImageForCategory:annotationView.searchAnnotation.category];
     
     [self.mapView viewForAnnotation:annotationView.searchAnnotation].image = tmpImage;
 }

@@ -95,7 +95,11 @@ const float kMaxTimeBetweenMapUpdates = 15.0;
         self.locationManager = [[CLLocationManager alloc] init];
         
     }
-    [self.locationManager requestAlwaysAuthorization];
+    
+    //Always active needed for notifications. Uncomment to authorize local notifications
+    //[self.locationManager requestAlwaysAuthorization];
+    
+    [self.locationManager requestWhenInUseAuthorization];
     self.locationManager.delegate = self;
     
     // Set a movement threshold for new events.
@@ -125,7 +129,7 @@ const float kMaxTimeBetweenMapUpdates = 15.0;
 }
 
 #pragma mark - Notifications
-
+/***Disabled local notifications - uncomment to add back in ***/
 - (void) checkForNearbyPOIs {
     
     if (self.favoriteLocations.count > 0) {

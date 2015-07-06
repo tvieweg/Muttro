@@ -160,8 +160,7 @@ const float kCAButtonSpacing = 6.0;
 }
 
 - (void) setImageForCategoryButton {
-        UIImage *tmpImage = [[UIImage alloc] init];
-        tmpImage = [self.searchAnnotation setImageForCategory:self.searchAnnotation.category];
+        UIImage *tmpImage = [self.searchAnnotation setImageForCategory:self.searchAnnotation.category];
         [self.categoryButton setImage:tmpImage forState:UIControlStateNormal]; 
 }
 

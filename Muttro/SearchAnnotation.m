@@ -90,8 +90,7 @@
     annotationView.enabled = YES;
     annotationView.canShowCallout = NO;
 
-    UIImage *tmpImage = [[UIImage alloc] init];
-    tmpImage = [self setImageForCategory:self.category];
+    UIImage *tmpImage = [self setImageForCategory:self.category];
     annotationView.image = tmpImage;
 
     return annotationView;
